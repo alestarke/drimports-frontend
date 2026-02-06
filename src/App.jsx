@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './pages/login';
-import DashboardLayout from './pages/dashboard'; // O arquivo Dashboard agora é o Layout
-import Home from './pages/home'; // O conteúdo da home
-import Products from './pages/products'; // A lista de produtos
+import Login from './pages/Login';
+import DashboardLayout from './pages/Dashboard'; // O arquivo Dashboard agora é o Layout
+import Home from './pages/Home'; // O conteúdo da home
+import Products from './pages/Products'; // A lista de produtos
 
 function App() {
   return (
