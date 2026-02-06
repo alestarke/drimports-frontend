@@ -1,36 +1,34 @@
-import { useState } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import Login from './pages/login'
-import Dashboard from './pages/dashboard'
-import './App.css'
-
-function Home() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <h1 className="text-3xl font-bold underline">
-        Hello world!
-      </h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-      </div>
-    </>
-  )
-}
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/login';
+import DashboardLayout from './pages/dashboard'; // O arquivo Dashboard agora é o Layout
+import Home from './pages/home'; // O conteúdo da home
+import Products from './pages/products'; // A lista de produtos
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
+        {/* Rota Padrão */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        
+        {/* ROTAS ANINHADAS (Nested Routes) */}
+        {/* O DashboardLayout envolve todas as rotas filhas */}
+        <Route path="/dashboard" element={<DashboardLayout />}>
+            
+            {/* index: Significa que essa é a rota padrão quando acessa /dashboard */}
+            <Route index element={<Home />} /> 
+            
+            {/* Acessível em /dashboard/products */}
+            <Route path="products" element={<Products />} />
+            
+            {/* Exemplo futuro */}
+            {/* <Route path="clients" element={<Clients />} /> */}
+            
+        </Route>
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;

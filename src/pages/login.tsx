@@ -19,11 +19,18 @@ export default function Login() {
     setError('');
 
     try {
-      // Aqui entraria a chamada para o seu backend Laravel
       const response = await axios.post('http://localhost:7000/api/login', {
         email,
         password
       });
+
+      const {token, user} = response.data;
+
+      if (token) {
+        localStorage.setItem('authToken', token);
+        localStorage.setItem('userName', user.name);
+      }
+
       console.log('Login realizado com sucesso:', response.data);
       navigate('/dashboard');
     } catch (err) {
@@ -80,12 +87,7 @@ export default function Login() {
 
             {/* Input de Senha */}
             <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <label className="text-sm font-medium text-gray-700">Senha</label>
-                <a href="#" className="text-sm text-gray-600 hover:text-gray-700 hover:underline">
-                  Esqueceu?
-                </a>
-              </div>
+              <label className="text-sm font-medium text-gray-700">Senha</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <input
@@ -96,6 +98,11 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+              </div>
+              <div className="flex justify-end">
+                <a href="#" className="text-sm text-gray-600 hover:text-gray-700 hover:underline">
+                  Esqueceu?
+                </a>
               </div>
             </div>
 

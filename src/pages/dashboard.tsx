@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom'; // <--- Importações essenciais
 import { 
   LayoutDashboard, 
   Users, 
@@ -14,29 +15,36 @@ import {
   List,
   UserRound
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const location = useLocation(); // Hook para saber a URL atual
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  // Função de Logout Mockada
+  // Função de Logout
   const handleLogout = () => {
-    // Aqui você limparia o token/sessionStorage futuramente
     navigate('/login');
+  };
+
+  // Função para navegar
+  const handleNavigation = (path: string) => {
+    navigate(path);
   };
 
   return (
     <div className="flex h-screen bg-gray-100">
       
       {/* --- SIDEBAR (Lateral) --- */}
-      {/* A largura muda dependendo se está aberto ou fechado (hidden em mobile) */}
       <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} bg-gray-900 text-white transition-all duration-300 flex flex-col`}>
         
         {/* Logo Area */}
         <div className="h-16 flex items-center justify-center border-b border-gray-800">
            {isSidebarOpen ? (
-             <h1 className="text-xl font-bold tracking-wider">DR. IMPORTS</h1>
+             <img 
+               src="/escrita-logo-dr.png" 
+               alt="Dr. Imports Logo" 
+               className="h-14 object-contain"
+             />
            ) : (
              <img 
                src="/logo-dr.png" 
@@ -48,15 +56,69 @@ export default function Dashboard() {
     
         {/* Menu Items */}
         <nav className="flex-1 py-6 space-y-2 px-3">
-            <MenuItem icon={<LayoutDashboard size={20} />} text="Visão Geral" isOpen={isSidebarOpen} active />
-            <MenuItem icon={<DollarSign size={20} />} text="Vendas" isOpen={isSidebarOpen} />
-            <MenuItem icon={<Package size={20} />} text="Importações" isOpen={isSidebarOpen} />
-            <MenuItem icon={<Boxes size={20} />} text="Produtos" isOpen={isSidebarOpen} />
-            <MenuItem icon={<Users size={20} />} text="Clientes" isOpen={isSidebarOpen} />
-            <MenuItem icon={<UserRound size={20} />} text="Usuários" isOpen={isSidebarOpen} />
-            <MenuItem icon={<Target size={20} />} text="Marcas" isOpen={isSidebarOpen} />
-            <MenuItem icon={<List size={20} />} text="Categorias" isOpen={isSidebarOpen} />
-            <MenuItem icon={<Settings size={20} />} text="Configurações" isOpen={isSidebarOpen} />
+            <MenuItem 
+                icon={<LayoutDashboard size={20} />} 
+                text="Visão Geral" 
+                isOpen={isSidebarOpen} 
+                active={location.pathname === '/dashboard'} // Ativo se a URL for exata
+                onClick={() => handleNavigation('/dashboard')}
+            />
+            <MenuItem 
+                icon={<DollarSign size={20} />} 
+                text="Vendas" 
+                isOpen={isSidebarOpen} 
+                active={location.pathname === '/dashboard/sales'}
+                onClick={() => handleNavigation('/dashboard/sales')}
+            />
+            <MenuItem 
+                icon={<Package size={20} />} 
+                text="Importações" 
+                isOpen={isSidebarOpen} 
+                active={location.pathname === '/dashboard/imports'}
+                onClick={() => handleNavigation('/dashboard/imports')}
+            />
+            <MenuItem 
+                icon={<Boxes size={20} />} 
+                text="Produtos" 
+                isOpen={isSidebarOpen} 
+                active={location.pathname === '/dashboard/products'} // Ativo se for Produtos
+                onClick={() => handleNavigation('/dashboard/products')}
+            />
+            <MenuItem 
+                icon={<Users size={20} />} 
+                text="Clientes" 
+                isOpen={isSidebarOpen} 
+                active={location.pathname === '/dashboard/clients'}
+                onClick={() => handleNavigation('/dashboard/clients')}
+            />
+            <MenuItem 
+                icon={<UserRound size={20} />} 
+                text="Usuários" 
+                isOpen={isSidebarOpen} 
+                active={location.pathname === '/dashboard/users'}
+                onClick={() => handleNavigation('/dashboard/users')}
+            />
+            <MenuItem 
+                icon={<Target size={20} />} 
+                text="Marcas" 
+                isOpen={isSidebarOpen} 
+                active={location.pathname === '/dashboard/brands'}
+                onClick={() => handleNavigation('/dashboard/brands')}
+            />
+            <MenuItem 
+                icon={<List size={20} />} 
+                text="Categorias" 
+                isOpen={isSidebarOpen} 
+                active={location.pathname === '/dashboard/categories'}
+                onClick={() => handleNavigation('/dashboard/categories')}
+            />
+            <MenuItem 
+                icon={<Settings size={20} />} 
+                text="Configurações" 
+                isOpen={isSidebarOpen} 
+                active={location.pathname === '/dashboard/settings'}
+                onClick={() => handleNavigation('/dashboard/settings')}
+            />
         </nav>
 
         {/* Footer Sidebar */}
@@ -74,8 +136,8 @@ export default function Dashboard() {
       {/* --- MAIN CONTENT (Direita) --- */}
       <div className="flex-1 flex flex-col overflow-hidden">
         
-        {/* Header */}
-        <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6">
+        {/* Header (Mantido igual) */}
+        <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6 z-10">
             <div className="flex items-center gap-4">
                 <button 
                     onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -104,36 +166,24 @@ export default function Dashboard() {
             </div>
         </header>
 
-        {/* Conteúdo Dinâmico (Onde suas tabelas e gráficos entrarão) */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
-            <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Painel de Controle</h2>
-                <p className="text-gray-500">Bem-vindo de volta, André.</p>
-            </div>
-
-            {/* Exemplo de Cards de Resumo */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <SummaryCard title="Total Importado" value="R$ 145.200" color="blue" />
-                <SummaryCard title="Processos Ativos" value="12" color="yellow" />
-                <SummaryCard title="Aguardando Pagamento" value="4" color="green" />
-            </div>
-
-            {/* Espaço para conteúdo futuro */}
-            <div className="bg-white rounded-lg shadow-sm p-6 h-96 border border-gray-200">
-                <p className="text-gray-400 text-center mt-40">Conteúdo do sistema será carregado aqui...</p>
-            </div>
+        {/* --- ÁREA DINÂMICA (Onde a mágica acontece) --- */}
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
+            {/* O Outlet renderiza o componente filho da rota (Home ou Products) */}
+            <Outlet />
         </main>
       </div>
     </div>
   );
 }
 
-// --- Subcomponentes para organizar o código ---
+// --- Subcomponentes ---
 
-// Item do Menu
-function MenuItem({ icon, text, isOpen, active = false }: any) {
+// Item do Menu (Atualizado com onClick)
+function MenuItem({ icon, text, isOpen, active = false, onClick }: any) {
     return (
-        <button className={`flex items-center gap-4 w-full p-3 rounded-lg transition-all duration-200 group
+        <button 
+            onClick={onClick} // Adicionado evento de clique
+            className={`flex items-center gap-4 w-full p-3 rounded-lg transition-all duration-200 group
             ${active 
                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' 
                 : 'text-gray-400 hover:bg-gray-800 hover:text-white'
@@ -143,28 +193,12 @@ function MenuItem({ icon, text, isOpen, active = false }: any) {
             <span className={`${!isOpen && 'hidden'} whitespace-nowrap origin-left transition-all duration-300`}>
                 {text}
             </span>
-            {/* Tooltip simples quando fechado */}
+            
             {!isOpen && (
                 <div className="absolute left-16 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none z-50">
                     {text}
                 </div>
             )}
         </button>
-    );
-}
-
-// Card de Resumo
-function SummaryCard({ title, value, color }: any) {
-    const colors: any = {
-        blue: 'border-l-4 border-blue-500',
-        yellow: 'border-l-4 border-yellow-500',
-        green: 'border-l-4 border-green-500',
-    };
-
-    return (
-        <div className={`bg-white rounded-lg shadow-sm p-6 ${colors[color]}`}>
-            <h3 className="text-gray-500 text-sm font-medium uppercase tracking-wider">{title}</h3>
-            <p className="text-2xl font-bold text-gray-800 mt-2">{value}</p>
-        </div>
     );
 }
