@@ -1,4 +1,3 @@
-// src/pages/Home.tsx
 import { Package, TrendingUp, AlertCircle } from 'lucide-react';
 
 export default function Home() {

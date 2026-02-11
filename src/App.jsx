@@ -1,31 +1,33 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
-import DashboardLayout from './pages/Dashboard'; // O arquivo Dashboard agora é o Layout
-import Home from './pages/Home'; // O conteúdo da home
-import Products from './pages/Products'; // A lista de produtos
+import Dashboard from './pages/Dashboard'; // Layout
+import Home from './pages/Home';
+import Products from './pages/Products';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Rota Padrão */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
         
-        {/* ROTAS ANINHADAS (Nested Routes) */}
-        {/* O DashboardLayout envolve todas as rotas filhas */}
-        <Route path="/dashboard" element={<DashboardLayout />}>
-            
-            {/* index: Significa que essa é a rota padrão quando acessa /dashboard */}
-            <Route index element={<Home />} /> 
-            
-            {/* Acessível em /dashboard/products */}
-            <Route path="products" element={<Products />} />
-            
-            {/* Exemplo futuro */}
-            {/* <Route path="clients" element={<Clients />} /> */}
-            
-        </Route>
+        {/* Rota /dashboard -> Carrega Layout + Home */}
+        <Route path="/dashboard" element={
+            <Dashboard>
+                <Home />
+            </Dashboard>
+        } />
+
+        {/* Rota /products -> Carrega Layout + Products */}
+        <Route path="/products" element={
+            <Dashboard>
+                <Products />
+            </Dashboard>
+        } />
+        
+        {/* Futuras rotas ficam limpas assim também: */}
+        {/* <Route path="/clients" element={<Dashboard><Clients /></Dashboard>} /> */}
+
       </Routes>
     </BrowserRouter>
   );

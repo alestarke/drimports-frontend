@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom'; // <--- Importações essenciais
+import { useState, ReactNode } from 'react'; // Adicionado ReactNode
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
@@ -16,17 +16,22 @@ import {
   UserRound
 } from 'lucide-react';
 
-export default function Dashboard() {
+// Define que o Dashboard aceita "filhos" (outros componentes dentro dele)
+interface DashboardProps {
+  children?: ReactNode;
+}
+
+export default function Dashboard({ children }: DashboardProps) {
   const navigate = useNavigate();
-  const location = useLocation(); // Hook para saber a URL atual
+  const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  // Função de Logout
   const handleLogout = () => {
+    localStorage.removeItem('token'); // Boa prática: limpar token ao sair
+    localStorage.removeItem('user');
     navigate('/login');
   };
 
-  // Função para navegar
   const handleNavigation = (path: string) => {
     navigate(path);
   };
@@ -34,7 +39,7 @@ export default function Dashboard() {
   return (
     <div className="flex h-screen bg-gray-100">
       
-      {/* --- SIDEBAR (Lateral) --- */}
+      {/* --- SIDEBAR --- */}
       <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} bg-gray-900 text-white transition-all duration-300 flex flex-col`}>
         
         {/* Logo Area */}
@@ -54,70 +59,70 @@ export default function Dashboard() {
            )}
         </div>
     
-        {/* Menu Items */}
+        {/* Menu Items - AGORA COM ROTAS DIRETAS (Sem /dashboard/...) */}
         <nav className="flex-1 py-6 space-y-2 px-3">
             <MenuItem 
                 icon={<LayoutDashboard size={20} />} 
                 text="Visão Geral" 
                 isOpen={isSidebarOpen} 
-                active={location.pathname === '/dashboard'} // Ativo se a URL for exata
+                active={location.pathname === '/dashboard'} 
                 onClick={() => handleNavigation('/dashboard')}
             />
             <MenuItem 
                 icon={<DollarSign size={20} />} 
                 text="Vendas" 
                 isOpen={isSidebarOpen} 
-                active={location.pathname === '/dashboard/sales'}
-                onClick={() => handleNavigation('/dashboard/sales')}
+                active={location.pathname === '/sales'}
+                onClick={() => handleNavigation('/sales')}
             />
             <MenuItem 
                 icon={<Package size={20} />} 
                 text="Importações" 
                 isOpen={isSidebarOpen} 
-                active={location.pathname === '/dashboard/imports'}
-                onClick={() => handleNavigation('/dashboard/imports')}
+                active={location.pathname === '/imports'}
+                onClick={() => handleNavigation('/imports')}
             />
             <MenuItem 
                 icon={<Boxes size={20} />} 
                 text="Produtos" 
                 isOpen={isSidebarOpen} 
-                active={location.pathname === '/dashboard/products'} // Ativo se for Produtos
-                onClick={() => handleNavigation('/dashboard/products')}
+                active={location.pathname === '/products'} // Rota limpa
+                onClick={() => handleNavigation('/products')}
             />
             <MenuItem 
                 icon={<Users size={20} />} 
                 text="Clientes" 
                 isOpen={isSidebarOpen} 
-                active={location.pathname === '/dashboard/clients'}
-                onClick={() => handleNavigation('/dashboard/clients')}
+                active={location.pathname === '/clients'}
+                onClick={() => handleNavigation('/clients')}
             />
             <MenuItem 
                 icon={<UserRound size={20} />} 
                 text="Usuários" 
                 isOpen={isSidebarOpen} 
-                active={location.pathname === '/dashboard/users'}
-                onClick={() => handleNavigation('/dashboard/users')}
+                active={location.pathname === '/users'}
+                onClick={() => handleNavigation('/users')}
             />
             <MenuItem 
                 icon={<Target size={20} />} 
                 text="Marcas" 
                 isOpen={isSidebarOpen} 
-                active={location.pathname === '/dashboard/brands'}
-                onClick={() => handleNavigation('/dashboard/brands')}
+                active={location.pathname === '/brands'}
+                onClick={() => handleNavigation('/brands')}
             />
             <MenuItem 
                 icon={<List size={20} />} 
                 text="Categorias" 
                 isOpen={isSidebarOpen} 
-                active={location.pathname === '/dashboard/categories'}
-                onClick={() => handleNavigation('/dashboard/categories')}
+                active={location.pathname === '/categories'}
+                onClick={() => handleNavigation('/categories')}
             />
             <MenuItem 
                 icon={<Settings size={20} />} 
                 text="Configurações" 
                 isOpen={isSidebarOpen} 
-                active={location.pathname === '/dashboard/settings'}
-                onClick={() => handleNavigation('/dashboard/settings')}
+                active={location.pathname === '/settings'}
+                onClick={() => handleNavigation('/settings')}
             />
         </nav>
 
@@ -133,10 +138,10 @@ export default function Dashboard() {
         </div>
       </aside>
 
-      {/* --- MAIN CONTENT (Direita) --- */}
+      {/* --- MAIN CONTENT --- */}
       <div className="flex-1 flex flex-col overflow-hidden">
         
-        {/* Header (Mantido igual) */}
+        {/* Header */}
         <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6 z-10">
             <div className="flex items-center gap-4">
                 <button 
@@ -166,10 +171,10 @@ export default function Dashboard() {
             </div>
         </header>
 
-        {/* --- ÁREA DINÂMICA (Onde a mágica acontece) --- */}
+        {/* --- CONTEÚDO DA PÁGINA (CHILDREN) --- */}
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
-            {/* O Outlet renderiza o componente filho da rota (Home ou Products) */}
-            <Outlet />
+            {/* Aqui entra o componente da página (Home, Products, etc) */}
+            {children}
         </main>
       </div>
     </div>
@@ -178,11 +183,10 @@ export default function Dashboard() {
 
 // --- Subcomponentes ---
 
-// Item do Menu (Atualizado com onClick)
 function MenuItem({ icon, text, isOpen, active = false, onClick }: any) {
     return (
         <button 
-            onClick={onClick} // Adicionado evento de clique
+            onClick={onClick}
             className={`flex items-center gap-4 w-full p-3 rounded-lg transition-all duration-200 group
             ${active 
                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' 
