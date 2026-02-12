@@ -14,8 +14,20 @@ interface Product {
   category?: { name: string };
 }
 
+interface Brand {
+  id: number;
+  name: string;
+}
+
+interface Category {
+  id: number;
+  name: string;
+}
+
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   
   // --- ESTADOS DO MODAL ---
@@ -31,12 +43,13 @@ export default function Products() {
     description: '',
     price: '',
     stock_quantity: 0,
-    brand_id: 1,
-    category_id: 1 
+    brand_id: 0,
+    category_id: 0 
   });
 
   useEffect(() => {
     fetchProducts();
+    fetchBrandsAndCategories();
   }, []); 
 
   const fetchProducts = async () => {
@@ -50,16 +63,28 @@ export default function Products() {
     }
   };
 
+  const fetchBrandsAndCategories = async () => {
+    try {
+      const [brandsRes, categoriesRes] = await Promise.all([
+        api.get('/brands'),
+        api.get('/categories')
+      ]);
+      setBrands(brandsRes.data.data);
+      setCategories(categoriesRes.data.data);
+    } catch (err) {
+      console.error("Erro ao carregar marcas e categorias", err);
+    }
+  };
+
   // Função para abrir o modal em modo de EDIÇÃO
   const handleEditProduct = async (id: number) => {
-    // 1. Abre o modal e mostra loading (opcional, mas boa prática)
     setIsModalOpen(true);
-    setEditingId(id); // Marca que estamos editando este ID
+    setEditingId(id);
 
     try {
         // 2. Busca os dados frescos do produto na API (GET /products/{id})
         const response = await api.get(`/products/${id}`);
-        const product = response.data.data; // O Laravel geralmente retorna o objeto direto no show()
+        const product = response.data.data;
 
         console.log("Produto carregado para edição:", product);
 
@@ -70,8 +95,8 @@ export default function Products() {
             description: product.description || '',
             price: product.price,
             stock_quantity: product.stock_quantity,
-            brand_id: product.brand_id || 1,
-            category_id: product.category_id || 1
+            brand_id: product.brand_id || 0,
+            category_id: product.category_id || 0
         });
 
     } catch (error) {
@@ -84,8 +109,8 @@ export default function Products() {
   // Função para fechar e limpar tudo (Reset)
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setEditingId(null); // Limpa o ID de edição
-    setFormData({ // Limpa o formulário
+    setEditingId(null); 
+    setFormData({
         name: '',
         slug: '',
         description: '',
@@ -111,9 +136,8 @@ export default function Products() {
             toast.success('Produto criado com sucesso!');
         }
         
-        handleCloseModal(); // Fecha e limpa
-        fetchProducts(); // Recarrega a tabela
-
+        handleCloseModal();
+        fetchProducts(); 
     } catch (error) {
         console.error('Erro ao salvar:', error);
         toast.error('Erro ao salvar. Verifique os dados.');
@@ -127,7 +151,7 @@ export default function Products() {
     return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => {
       const newData = { ...prev, [name]: value };
@@ -211,7 +235,6 @@ export default function Products() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right space-x-2">
-                    {/* BOTÃO DE EDITAR */}
                     <button 
                         onClick={() => handleEditProduct(product.id)}
                         className="text-gray-400 hover:text-blue-600 p-1 transition-colors"
@@ -219,7 +242,6 @@ export default function Products() {
                     >
                         <Edit size={18} />
                     </button>
-                    {/* BOTÃO DE DELETAR */}
                     <button 
                         onClick={() => handleDeleteProduct(product.id)}
                         className="text-gray-400 hover:text-red-600 p-1 transition-colors"
@@ -235,7 +257,6 @@ export default function Products() {
         </div>
       )}
 
-      {/* Modal Reutilizável */}
       <Modal 
           title={editingId ? "Editar Produto" : "Novo Produto"}
           isOpen={isModalOpen} 
@@ -243,7 +264,6 @@ export default function Products() {
           maxWidth="max-w-2xl"
        >
           <form onSubmit={handleSave} className="space-y-4">
-             {/* Nome */}
              <div>
                  <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Produto</label>
                  <input 
@@ -253,7 +273,6 @@ export default function Products() {
                  />
              </div>
 
-             {/* Slug */}
              <div>
                  <label className="block text-xs font-medium text-gray-500 mb-1">URL (Slug)</label>
                  <input 
@@ -264,7 +283,6 @@ export default function Products() {
              </div>
 
              <div className="grid grid-cols-2 gap-4">
-                {/* Preço */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Preço (R$)</label>
                     <input 
@@ -273,7 +291,7 @@ export default function Products() {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                     />
                 </div>
-                {/* Estoque */}
+
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Estoque</label>
                     <input 
@@ -284,7 +302,39 @@ export default function Products() {
                 </div>
              </div>
 
-             {/* Descrição */}
+             <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                    <select
+                        name="category_id"
+                        value={formData.category_id}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                        required
+                    >
+                        <option value="">Selecione...</option>
+                        {categories.map((cat) => (
+                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                        ))}
+                    </select>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Marca</label>
+                    <select
+                        name="brand_id"
+                        value={formData.brand_id}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                        required
+                    >
+                        <option value="">Selecione...</option>
+                        {brands.map((brand) => (
+                            <option key={brand.id} value={brand.id}>{brand.name}</option>
+                        ))}
+                    </select>
+                </div>
+             </div>
+
              <div>
                  <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
                  <textarea 
@@ -294,7 +344,6 @@ export default function Products() {
                  />
              </div>
 
-             {/* Footer */}
              <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-4">
                  <button 
                     type="button" 
