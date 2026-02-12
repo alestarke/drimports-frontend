@@ -1,5 +1,6 @@
-import { useState, ReactNode } from 'react'; // Adicionado ReactNode
+import { useState, ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { 
   LayoutDashboard, 
   Users, 
@@ -16,7 +17,6 @@ import {
   UserRound
 } from 'lucide-react';
 
-// Define que o Dashboard aceita "filhos" (outros componentes dentro dele)
 interface DashboardProps {
   children?: ReactNode;
 }
@@ -27,8 +27,8 @@ export default function Dashboard({ children }: DashboardProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const handleLogout = () => {
-    localStorage.removeItem('token'); // Boa prática: limpar token ao sair
-    localStorage.removeItem('user');
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userName');
     navigate('/login');
   };
 
@@ -38,6 +38,16 @@ export default function Dashboard({ children }: DashboardProps) {
 
   return (
     <div className="flex h-screen bg-gray-100">
+      <Toaster 
+         position="bottom-left" 
+         containerStyle={{
+            left: isSidebarOpen ? 280 : 100,
+            bottom: 20,
+        }}
+        toastOptions={{
+            style: { background: '#333', color: '#fff' }
+        }}
+      />
       
       {/* --- SIDEBAR --- */}
       <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} bg-gray-900 text-white transition-all duration-300 flex flex-col`}>
@@ -59,7 +69,7 @@ export default function Dashboard({ children }: DashboardProps) {
            )}
         </div>
     
-        {/* Menu Items - AGORA COM ROTAS DIRETAS (Sem /dashboard/...) */}
+        {/* Menu Items */}
         <nav className="flex-1 py-6 space-y-2 px-3">
             <MenuItem 
                 icon={<LayoutDashboard size={20} />} 
@@ -86,7 +96,7 @@ export default function Dashboard({ children }: DashboardProps) {
                 icon={<Boxes size={20} />} 
                 text="Produtos" 
                 isOpen={isSidebarOpen} 
-                active={location.pathname === '/products'} // Rota limpa
+                active={location.pathname === '/products'}
                 onClick={() => handleNavigation('/products')}
             />
             <MenuItem 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import axios from 'axios';
 
 export default function Login() {
@@ -40,7 +41,6 @@ export default function Login() {
     }
   };
 
-  // --- RENDER (JSX) ---
   return (
     // Container Principal: Fundo gradiente suave
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200 p-4">

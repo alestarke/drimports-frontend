@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Search, Edit, Trash2, Package, Save } from 'lucide-react';
 import api from '../services/api';
 import Modal from '../components/Modal';
+import toast from 'react-hot-toast';
 
 interface Product {
   id: number;
@@ -75,8 +76,8 @@ export default function Products() {
 
     } catch (error) {
         console.error("Erro ao carregar produto", error);
-        alert("Erro ao carregar detalhes do produto.");
-        handleCloseModal(); // Fecha se der erro
+        toast.error("Erro ao carregar detalhes do produto.");
+        handleCloseModal();
     }
   };
 
@@ -103,11 +104,11 @@ export default function Products() {
         if (editingId) {
             // --- MODO EDIÇÃO (PUT) ---
             await api.put(`/products/${editingId}`, formData);
-            alert('Produto atualizado com sucesso!');
+            toast.success('Produto atualizado com sucesso!');
         } else {
             // --- MODO CRIAÇÃO (POST) ---
             await api.post('/products', formData);
-            alert('Produto criado com sucesso!');
+            toast.success('Produto criado com sucesso!');
         }
         
         handleCloseModal(); // Fecha e limpa
@@ -115,7 +116,7 @@ export default function Products() {
 
     } catch (error) {
         console.error('Erro ao salvar:', error);
-        alert('Erro ao salvar. Verifique os dados.');
+        toast.error('Erro ao salvar. Verifique os dados.');
     } finally {
         setSaving(false);
     }
@@ -147,6 +148,7 @@ export default function Products() {
             setProducts(prev => prev.filter(p => p.id !== id));
         } catch (error) {
             console.error("Erro ao deletar", error);
+            toast.error("Erro ao deletar produto.");
         }
     }
   };
