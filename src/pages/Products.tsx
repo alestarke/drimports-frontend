@@ -273,15 +273,6 @@ export default function Products() {
                  />
              </div>
 
-             <div>
-                 <label className="block text-xs font-medium text-gray-500 mb-1">URL (Slug)</label>
-                 <input 
-                    type="text" name="slug" readOnly
-                    value={formData.slug}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-100 text-gray-500 text-sm outline-none"
-                 />
-             </div>
-
              <div className="grid grid-cols-2 gap-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Preço (R$)</label>

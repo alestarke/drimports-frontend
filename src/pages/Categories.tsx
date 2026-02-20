@@ -1,26 +1,27 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Tag, Save } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, List, Save } from 'lucide-react';
 import api from '../services/api';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 
-interface Brand {
+interface Category {
   id: number;
   name: string;
   slug: string;
   description?: string;
 }
 
-export default function Brands() {
+export default function Categories() {
   // --- ESTADOS ---
-  const [brands, setBrands] = useState<Brand[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Estados do Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
 
-  // Formulário simples (apenas nome e slug)
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -29,16 +30,17 @@ export default function Brands() {
 
   // --- BUSCAR DADOS ---
   useEffect(() => {
-    fetchBrands();
+    fetchCategories();
   }, []);
 
-  const fetchBrands = async () => {
+  const fetchCategories = async () => {
     try {
-      const response = await api.get('/brands');
-      setBrands(response.data.data); 
+      const response = await api.get('/categories');
+      // Ajuste se sua API retorna a lista dentro de .data.data
+      setCategories(response.data.data || response.data); 
     } catch (error) {
-      console.error('Erro ao buscar marcas', error);
-      toast.error('Erro ao carregar marcas.');
+      console.error('Erro ao buscar categorias', error);
+      toast.error('Erro ao carregar categorias.');
     } finally {
       setLoading(false);
     }
@@ -64,33 +66,33 @@ export default function Brands() {
   };
 
   // --- AÇÕES DO CRUD ---
-  const handleEdit = (brand: Brand) => {
-    setEditingId(brand.id);
+  const handleEdit = (category: Category) => {
+    setEditingId(category.id);
     setFormData({
-      name: brand.name,
-      slug: brand.slug,
-      description: brand.description || ''
+      name: category.name,
+      slug: category.slug,
+      description: category.description || ''
     });
     setIsModalOpen(true);
   };
 
   const handleDelete = async (id: number) => {
-    // Confirmação (pode usar window.confirm se preferir)
     const result = await Swal.fire({
         title: 'Tem certeza?',
-        text: "Isso pode afetar produtos vinculados a esta marca!",
+        text: "Isso pode afetar produtos vinculados a esta categoria!",
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
         cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sim, excluir'
+        confirmButtonText: 'Sim, excluir',
+        cancelButtonText: 'Cancelar'
     });
 
     if (result.isConfirmed) {
         try {
-            await api.delete(`/brands/${id}`);
-            setBrands(prev => prev.filter(b => b.id !== id));
-            toast.success('Marca excluída com sucesso!');
+            await api.delete(`/categories/${id}`);
+            setCategories(prev => prev.filter(c => c.id !== id));
+            toast.success('Categoria excluída com sucesso!');
         } catch (error) {
             console.error(error);
             toast.error('Erro ao excluir. Verifique se há produtos vinculados.');
@@ -104,20 +106,18 @@ export default function Brands() {
 
     try {
       if (editingId) {
-        // Editar
-        await api.put(`/brands/${editingId}`, formData);
-        toast.success('Marca atualizada!');
+        await api.put(`/categories/${editingId}`, formData);
+        toast.success('Categoria atualizada!');
       } else {
-        // Criar
-        await api.post('/brands', formData);
-        toast.success('Marca criada!');
+        await api.post('/categories', formData);
+        toast.success('Categoria criada!');
       }
 
       handleCloseModal();
-      fetchBrands();
+      fetchCategories();
     } catch (error) {
       console.error(error);
-      toast.error('Erro ao salvar marca.');
+      toast.error('Erro ao salvar categoria.');
     } finally {
       setSaving(false);
     }
@@ -136,14 +136,14 @@ export default function Brands() {
       {/* Cabeçalho */}
       <div className="flex justify-between items-center mb-6">
         <div>
-            <h1 className="text-2xl font-bold text-gray-800">Marcas</h1>
-            <p className="text-gray-500">Gerencie os fabricantes</p>
+            <h1 className="text-2xl font-bold text-gray-800">Categorias</h1>
+            <p className="text-gray-500">Organize seus produtos por seções</p>
         </div>
         <button 
             onClick={() => { setEditingId(null); setIsModalOpen(true); }}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
         >
-          <Plus size={20} /> Nova Marca
+          <Plus size={20} /> Nova Categoria
         </button>
       </div>
 
@@ -151,7 +151,7 @@ export default function Brands() {
       <div className="bg-white p-4 rounded-lg shadow-sm mb-6 flex gap-4">
         <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
-            <input type="text" placeholder="Buscar marca..." className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <input type="text" placeholder="Buscar categoria..." className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
       </div>
 
@@ -165,35 +165,33 @@ export default function Brands() {
           <table className="w-full text-left border-collapse">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Marca</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Categoria</th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Slug</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Descrição</th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {brands.map((brand) => (
-                <tr key={brand.id} className="hover:bg-gray-50 transition-colors">
+              {categories.map((category) => (
+                <tr key={category.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                        <div className="bg-purple-100 p-2 rounded-lg text-purple-600">
-                            <Tag size={20} />
+                        <div className="bg-indigo-100 p-2 rounded-lg text-indigo-600">
+                            <List size={20} />
                         </div>
-                        <span className="font-medium text-gray-900">{brand.name}</span>
+                        <span className="font-medium text-gray-900">{category.name}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-gray-500 text-sm">{brand.slug}</td>
-                  <td className="px-6 py-4 text-gray-500 text-sm">{brand.description}</td>
+                  <td className="px-6 py-4 text-gray-500 text-sm">{category.slug}</td>
                   <td className="px-6 py-4 text-right space-x-2">
                     <button 
-                        onClick={() => handleEdit(brand)}
+                        onClick={() => handleEdit(category)}
                         className="text-gray-400 hover:text-blue-600 p-1"
                         title="Editar"
                     >
                         <Edit size={18} />
                     </button>
                     <button 
-                        onClick={() => handleDelete(brand.id)}
+                        onClick={() => handleDelete(category.id)}
                         className="text-gray-400 hover:text-red-600 p-1"
                         title="Excluir"
                     >
@@ -202,10 +200,10 @@ export default function Brands() {
                   </td>
                 </tr>
               ))}
-              {brands.length === 0 && (
+              {categories.length === 0 && (
                   <tr>
-                      <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
-                          Nenhuma marca cadastrada.
+                      <td colSpan={3} className="px-6 py-8 text-center text-gray-500">
+                          Nenhuma categoria cadastrada.
                       </td>
                   </tr>
               )}
@@ -216,19 +214,19 @@ export default function Brands() {
 
       {/* Modal */}
       <Modal 
-          title={editingId ? "Editar Marca" : "Nova Marca"}
+          title={editingId ? "Editar Categoria" : "Nova Categoria"}
           isOpen={isModalOpen} 
           onClose={handleCloseModal}
-          maxWidth="max-w-lg" 
+          maxWidth="max-w-lg"
        >
           <form onSubmit={handleSave} className="space-y-4">
              <div>
-                 <label className="block text-sm font-medium text-gray-700 mb-1">Nome da Marca</label>
+                 <label className="block text-sm font-medium text-gray-700 mb-1">Nome da Categoria</label>
                  <input 
                     type="text" name="name" required
                     value={formData.name} onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                    placeholder="Ex: Samsung, Apple..."
+                    placeholder="Ex: Smartphones, Acessórios..."
                  />
              </div>
 
@@ -238,7 +236,7 @@ export default function Brands() {
                     name="description" 
                     value={formData.description} onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                    placeholder="Descrição da marca..."
+                    placeholder="Descrição da categoria..."
                  />
              </div>
 

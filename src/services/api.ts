@@ -6,12 +6,9 @@ const api = axios.create({
 });
 
 // INTERCEPTADOR DE REQUISIÇÃO
-// Antes de qualquer chamada sair do front, ele "cola" o token
 api.interceptors.request.use((config) => {
-    // 1. Busca o token que gravamos no LocalStorage durante o Login
     const token = localStorage.getItem('authToken');
 
-    // 2. Se tiver token, adiciona no cabeçalho Authorization
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
@@ -45,15 +42,16 @@ api.interceptors.response.use(
             else if (status === 422) {
                 toast.error(errorMessage); 
             }
+            else if (status === 429) {
+                toast.error('Muitas requisições. Tente novamente mais tarde.');
+            }
             else if (status >= 500) {
                 toast.error('Erro no Servidor. Tente mais tarde.');
             }
             else {
-                // Outros erros
                 toast.error(errorMessage);
             }
         } else {
-            // Erro de rede (API desligada)
             toast.error('Erro de conexão. Verifique sua internet ou se a API está rodando.');
         }
 
