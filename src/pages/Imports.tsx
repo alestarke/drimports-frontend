@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Plane, Save, Calculator, DollarSign, Store, Calendar } from 'lucide-react';
+import { Edit, Trash2, Plane, Save, Calculator, DollarSign, Store, Calendar } from 'lucide-react';
 import api from '../services/api';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
+import ProductLookup from '../components/ProductLookup';
 
 interface Product {
   id: number;
   name: string;
+  price: string | number;
+  stock_quantity: number;
+  brand?: { name: string };
 }
 
 interface ImportRecord {
@@ -88,7 +92,7 @@ export default function Imports() {
   const fetchProducts = async () => {
     try {
       const response = await api.get('/products?all=true');
-      setProducts(response.data.data || []);
+      setProducts(response.data || []);
     } catch (error) {
       console.error(error);
     }
@@ -142,7 +146,6 @@ export default function Imports() {
 
     setSaving(true);
     try {
-      // O total_cost_brl vai junto na request (conforme sua validação exige)
       const payload = { ...formData, total_cost_brl: calculated.finalTotalBrl };
 
       if (editingId) {
@@ -156,7 +159,6 @@ export default function Imports() {
       handleCloseModal();
       fetchImports();
     } catch (error: any) {
-      // O axios repassa os erros de validação do Laravel (422) que tratamos no interceptor
       console.error(error);
     } finally {
       setSaving(false);
@@ -236,12 +238,11 @@ export default function Imports() {
         </div>
       )}
 
-      {/* --- MODAL MAIOR (max-w-4xl) --- */}
       <Modal 
         title={editingId ? "Editar Importação" : "Registrar Nova Importação"} 
         isOpen={isModalOpen} 
         onClose={handleCloseModal} 
-        maxWidth="max-w-4xl" // <--- AQUI DEIXA O MODAL LARGO
+        maxWidth="max-w-5xl"
       >
         <form onSubmit={handleSave} className="space-y-6">
            
@@ -249,10 +250,11 @@ export default function Imports() {
            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
               <div className="md:col-span-5">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Produto Importado</label>
-                  <select name="product_id" value={formData.product_id} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" required>
-                      <option value="0">Selecione...</option>
-                      {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
+                          <ProductLookup
+                              products={products}
+                              selectedId={formData.product_id}
+                              onSelect={(id) => setFormData(prev => ({ ...prev, product_id: id }))}
+                          />
               </div>
               <div className="md:col-span-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Loja / Fornecedor</label>
@@ -292,9 +294,9 @@ export default function Imports() {
            {/* LINHA 3: PAINEL DE RESUMO (Cálculo Automático) */}
            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 rounded-xl border border-blue-100 shadow-inner">
               <h3 className="text-sm font-bold text-blue-900 flex items-center gap-2 mb-4">
-                  <Calculator size={18} /> Resumo Financeiro da Importação
+                  <Calculator size={18} /> Resumo da Importação
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
                   <div className="flex flex-col">
                       <span className="text-xs text-blue-600 font-semibold uppercase tracking-wider mb-1">Total em Dólar</span>
                       <span className="text-xl font-medium text-gray-800">{formatUSD(calculated.totalUsd)}</span>
@@ -303,9 +305,9 @@ export default function Imports() {
                       <span className="text-xs text-red-500 font-semibold uppercase tracking-wider mb-1">Custo Total (BRL)</span>
                       <span className="text-xl font-bold text-red-600">{formatBRL(calculated.finalTotalBrl)}</span>
                   </div>
-                  <div className="flex flex-col bg-white px-4 py-2 rounded-lg shadow-sm border border-green-100">
+                  <div className="flex flex-col">
                       <span className="text-xs text-green-600 font-semibold uppercase tracking-wider mb-1">Custo Final / Unidade</span>
-                      <span className="text-2xl font-black text-green-600">{formatBRL(calculated.finalUnitBrl)}</span>
+                      <span className="text-xl font-bold text-green-600">{formatBRL(calculated.finalUnitBrl)}</span>
                   </div>
               </div>
            </div>
