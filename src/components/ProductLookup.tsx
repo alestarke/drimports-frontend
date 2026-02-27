@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Search, ChevronDown, Package, Check } from 'lucide-react';
+import { Search, ChevronDown, Package, Check, Plus } from 'lucide-react';
 
 // Ajuste a interface com os campos que sua API retorna
 interface Product {
@@ -14,9 +14,10 @@ interface ProductLookupProps {
   products: Product[];
   selectedId: number;
   onSelect: (id: number) => void;
+  onAddNew?: (searchTerm: string) => void;
 }
 
-export default function ProductLookup({ products, selectedId, onSelect }: ProductLookupProps) {
+export default function ProductLookup({ products, selectedId, onSelect, onAddNew }: ProductLookupProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -138,6 +139,19 @@ export default function ProductLookup({ products, selectedId, onSelect }: Produc
               </div>
             )}
           </div>
+          {/* BOTÃO DE CADASTRO RÁPIDO */}
+          {onAddNew && (
+            <div
+              onClick={() => {
+                onAddNew(searchTerm);
+                setIsOpen(false);
+              }}
+              className="p-3 bg-gray-50 border-t border-gray-200 text-sm font-medium text-blue-600 hover:bg-blue-100 hover:text-blue-700 cursor-pointer flex items-center justify-center gap-2 transition-colors"
+            >
+              <Plus size={18} />
+              {searchTerm ? `Cadastrar "${searchTerm}"` : 'Cadastrar Novo Produto'}
+            </div>
+          )}
         </div>
       )}
     </div>
