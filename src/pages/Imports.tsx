@@ -168,7 +168,8 @@ export default function Imports() {
       showCancelButton: true,
       confirmButtonColor: '#d33',
       cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sim, excluir'
+      confirmButtonText: 'Sim, excluir',
+      cancelButtonText: 'Cancelar'
     });
 
     if (result.isConfirmed) {
@@ -312,7 +313,7 @@ export default function Imports() {
                   <td className="px-6 py-4">
                     <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">{record.quantity} un.</span>
                   </td>
-                  <td className="px-6 py-4 font-medium text-red-600">
+                  <td className="px-6 py-4 font-medium text-gray-900">
                     {formatBRL(record.total_cost_brl)}
                   </td>
                   <td className="px-6 py-4 text-right space-x-2">

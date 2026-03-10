@@ -53,19 +53,24 @@ export default function Dashboard({ children }: DashboardProps) {
       <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} bg-gray-900 text-white transition-all duration-300 flex flex-col`}>
         
         {/* Logo Area */}
-        <div className="h-16 flex items-center justify-center border-b border-gray-800">
+        <div className="h-16 flex items-center justify-center border-b border-gray-800 overflow-hidden px-2">
            {isSidebarOpen ? (
-             <img 
-               src="/escrita-logo-dr.png" 
-               alt="Dr. Imports Logo" 
-               className="h-14 object-contain"
-             />
+             // Logo aberta (Escrita completa)
+             <div className="flex items-center cursor-default select-none">
+                <span className="text-2xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">
+                    DR.
+                </span>
+                <span className="text-xl font-medium tracking-[0.15em] text-white ml-2">
+                    IMPORTS
+                </span>
+             </div>
            ) : (
-             <img 
-               src="/logo-dr.png" 
-               alt="Dr. Imports Logo" 
-               className="w-14 h-14 rounded-full object-cover"
-             />
+             // Logo fechada (Ícone/Iniciais)
+             <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 shadow-lg shadow-blue-500/20 cursor-default select-none transition-all transform hover:scale-105">
+                <span className="text-white font-black text-lg italic tracking-tighter">
+                    DR
+                </span>
+             </div>
            )}
         </div>
     

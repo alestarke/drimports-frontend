@@ -60,7 +60,7 @@ export default function Sales() {
   const fetchSales = async () => {
     try {
       const response = await api.get('/sales');
-      setSales(response.data?.data || response.data || []);
+      setSales(response.data?.data || []);
     } catch (error) { toast.error('Erro ao carregar vendas.'); } finally { setLoading(false); }
   };
 
@@ -74,7 +74,7 @@ export default function Sales() {
   const fetchProducts = async () => {
     try {
       const response = await api.get('/products?all=true');
-      setProducts(response.data?.data || response.data || []);
+      setProducts(response.data || []);
     } catch (error) { console.error(error); }
   };
 
@@ -191,7 +191,7 @@ export default function Sales() {
       )}
 
       {/* MODAL DE VENDA */}
-      <Modal title="Registrar Venda" isOpen={isModalOpen} onClose={handleCloseModal} maxWidth="max-w-4xl">
+      <Modal title="Registrar Venda" isOpen={isModalOpen} onClose={handleCloseModal} maxWidth="max-w-5xl">
         <form onSubmit={handleSave} className="space-y-6">
            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>

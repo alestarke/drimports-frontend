@@ -8,7 +8,7 @@ interface ModalProps {
   maxWidth?: string;
 }
 
-export default function Modal({ title, isOpen, onClose, children, maxWidth = "max-w-3xl" }: ModalProps) {
+export default function Modal({ title, isOpen, onClose, children, maxWidth = "max-w-4xl" }: ModalProps) {
   if (!isOpen) return null;
 
   return (
@@ -16,7 +16,7 @@ export default function Modal({ title, isOpen, onClose, children, maxWidth = "ma
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fadeIn">
       
       {/* O Card Branco (Container) */}
-      <div className={`bg-white rounded-lg shadow-xl w-full ${maxWidth} overflow-hidden transform transition-all`}>
+      <div className={`bg-white rounded-lg shadow-xl w-full ${maxWidth} transform transition-all`}>
         
         {/* Header Reutilizável */}
         <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50">

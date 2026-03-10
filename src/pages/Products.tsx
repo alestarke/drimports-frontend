@@ -3,6 +3,7 @@ import { Plus, Search, Edit, Trash2, Package, Save } from 'lucide-react';
 import api from '../services/api';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
 
 interface Product {
   id: number;
@@ -127,11 +128,9 @@ export default function Products() {
 
     try {
         if (editingId) {
-            // --- MODO EDIÇÃO (PUT) ---
             await api.put(`/products/${editingId}`, formData);
             toast.success('Produto atualizado com sucesso!');
         } else {
-            // --- MODO CRIAÇÃO (POST) ---
             await api.post('/products', formData);
             toast.success('Produto criado com sucesso!');
         }
@@ -166,14 +165,26 @@ export default function Products() {
   };
 
   const handleDeleteProduct = async (id: number) => {
-    if (window.confirm("Tem certeza que deseja excluir?")) {
-        try {
-            await api.delete(`/products/${id}`);
-            setProducts(prev => prev.filter(p => p.id !== id));
-        } catch (error) {
-            console.error("Erro ao deletar", error);
-            toast.error("Erro ao deletar produto.");
-        }
+    const result = await Swal.fire({
+      title: 'Tem certeza?',
+      text: "Isso removerá o produto do catálogo!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sim, excluir!',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await api.delete(`/products/${id}`);
+        toast.success('Produto excluído com sucesso!');
+        fetchProducts();
+      } catch (error) {
+        console.error('Erro ao excluir:', error);
+        toast.error('Erro ao excluir o produto.');
+      }
     }
   };
 
@@ -187,7 +198,6 @@ export default function Products() {
             <p className="text-gray-500">Gerencie seu catálogo</p>
         </div>
         <button 
-            // Ao clicar em Novo, garantimos que não tem ID selecionado
             onClick={() => { setEditingId(null); setIsModalOpen(true); }}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
         >
