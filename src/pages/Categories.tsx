@@ -40,7 +40,7 @@ export default function Categories() {
       setCategories(response.data.data || response.data); 
     } catch (error) {
       console.error('Erro ao buscar categorias', error);
-      toast.error('Erro ao carregar categorias.');
+
     } finally {
       setLoading(false);
     }
@@ -95,7 +95,7 @@ export default function Categories() {
             toast.success('Categoria excluída com sucesso!');
         } catch (error) {
             console.error(error);
-            toast.error('Erro ao excluir. Verifique se há produtos vinculados.');
+
         }
     }
   };
@@ -117,7 +117,7 @@ export default function Categories() {
       fetchCategories();
     } catch (error) {
       console.error(error);
-      toast.error('Erro ao salvar categoria.');
+
     } finally {
       setSaving(false);
     }

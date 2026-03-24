@@ -61,7 +61,7 @@ export default function Sales() {
     try {
       const response = await api.get('/sales');
       setSales(response.data?.data || []);
-    } catch (error) { toast.error('Erro ao carregar vendas.'); } finally { setLoading(false); }
+    } catch (error) { } finally { setLoading(false); }
   };
 
   const fetchClients = async () => {
@@ -101,7 +101,7 @@ export default function Sales() {
         await api.delete(`/sales/${id}`);
         setSales(prev => prev.filter(s => s.id !== id));
         toast.success('Venda cancelada!');
-      } catch (error) { toast.error('Erro ao excluir venda.'); }
+      } catch (error) { }
     }
   };
 
@@ -127,7 +127,7 @@ export default function Sales() {
       fetchProducts(); // Recarrega produtos para atualizar o estoque na tela
     } catch (error: any) {
       console.error(error);
-      toast.error(error.response?.data?.message || 'Erro ao registrar venda.');
+
     } finally {
       setSaving(false);
     }

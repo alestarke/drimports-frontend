@@ -102,7 +102,7 @@ export default function Products() {
 
     } catch (error) {
         console.error("Erro ao carregar produto", error);
-        toast.error("Erro ao carregar detalhes do produto.");
+
         handleCloseModal();
     }
   };
@@ -139,7 +139,7 @@ export default function Products() {
         fetchProducts(); 
     } catch (error) {
         console.error('Erro ao salvar:', error);
-        toast.error('Erro ao salvar. Verifique os dados.');
+
     } finally {
         setSaving(false);
     }
@@ -183,7 +183,7 @@ export default function Products() {
         fetchProducts();
       } catch (error) {
         console.error('Erro ao excluir:', error);
-        toast.error('Erro ao excluir o produto.');
+
       }
     }
   };

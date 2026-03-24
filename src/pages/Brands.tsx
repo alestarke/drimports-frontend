@@ -38,7 +38,7 @@ export default function Brands() {
       setBrands(response.data.data); 
     } catch (error) {
       console.error('Erro ao buscar marcas', error);
-      toast.error('Erro ao carregar marcas.');
+
     } finally {
       setLoading(false);
     }
@@ -93,7 +93,7 @@ export default function Brands() {
             toast.success('Marca excluída com sucesso!');
         } catch (error) {
             console.error(error);
-            toast.error('Erro ao excluir. Verifique se há produtos vinculados.');
+
         }
     }
   };
@@ -117,7 +117,7 @@ export default function Brands() {
       fetchBrands();
     } catch (error) {
       console.error(error);
-      toast.error('Erro ao salvar marca.');
+
     } finally {
       setSaving(false);
     }

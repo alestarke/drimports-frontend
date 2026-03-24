@@ -41,7 +41,7 @@ export default function Clients() {
       setClients(response.data?.data  || []); 
     } catch (error) {
       console.error(error);
-      toast.error('Erro ao carregar clientes.');
+
       setClients([]);
     } finally {
       setLoading(false);
@@ -83,7 +83,7 @@ export default function Clients() {
         setClients(prev => prev.filter(c => c.id !== id));
         toast.success('Cliente excluído com sucesso!');
       } catch (error) {
-        toast.error('Erro ao excluir cliente. Verifique dependências.');
+
       }
     }
   };
@@ -105,7 +105,7 @@ export default function Clients() {
       fetchClients();
     } catch (error: any) {
       console.error(error);
-      toast.error(error.response?.data?.message || 'Erro ao salvar cliente.');
+
     } finally {
       setSaving(false);
     }
