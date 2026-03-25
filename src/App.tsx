@@ -8,20 +8,63 @@ import Categories from './pages/Categories';
 import Imports from './pages/Imports';
 import Clients from './pages/Clients';
 import Sales from './pages/Sales';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Rota raiz redireciona para login ou dashboard dependendo do guard */}
         <Route path="/" element={<Navigate to="/login" replace />} />
+        
+        {/* Rota pública */}
         <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard><Home /></Dashboard>} />
-        <Route path="/products" element={<Dashboard><Products /></Dashboard>} />
-        <Route path="/brands" element={<Dashboard><Brands /></Dashboard>} />
-        <Route path="/categories" element={<Dashboard><Categories /></Dashboard>} />
-        <Route path="/imports" element={<Dashboard><Imports /></Dashboard>} />
-        <Route path="/clients" element={<Dashboard><Clients /></Dashboard>} />
-        <Route path="/sales" element={<Dashboard><Sales /></Dashboard>} />
+
+        {/* Rotas Protegidas - Todas envolvidas pelo ProtectedRoute */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Dashboard><Home /></Dashboard>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/products" element={
+          <ProtectedRoute>
+            <Dashboard><Products /></Dashboard>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/brands" element={
+          <ProtectedRoute>
+            <Dashboard><Brands /></Dashboard>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/categories" element={
+          <ProtectedRoute>
+            <Dashboard><Categories /></Dashboard>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/imports" element={
+          <ProtectedRoute>
+            <Dashboard><Imports /></Dashboard>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/clients" element={
+          <ProtectedRoute>
+            <Dashboard><Clients /></Dashboard>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/sales" element={
+          <ProtectedRoute>
+            <Dashboard><Sales /></Dashboard>
+          </ProtectedRoute>
+        } />
+
+        {/* Catch-all: qualquer rota não existente manda para o dashboard */}
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
   );

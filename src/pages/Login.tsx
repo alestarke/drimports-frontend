@@ -1,40 +1,43 @@
 import { useState } from 'react';
 import { Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-// import { Toaster } from 'react-hot-toast'; // Descomente se for usar o Toaster aqui também
-import axios from 'axios';
+import { supabase } from '../supabaseClient'; 
 
 export default function Login() {
-  // --- STATE (Estado) ---
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // --- HANDLERS (Funções) ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:7000/api';
-      const response = await axios.post(`${apiUrl}/login`, {
+      // 1. Chamada nativa do Supabase para login
+      const { data, error: supabaseError } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
       });
 
-      const {token, user} = response.data;
-
-      if (token) {
-        localStorage.setItem('authToken', token);
-        localStorage.setItem('userName', user.name);
+      // 2. O Supabase não joga a requisição pro catch automaticamente se a senha estiver errada,
+      // ele retorna um objeto de erro. Precisamos checar isso:
+      if (supabaseError) {
+        throw supabaseError;
       }
 
-      console.log('Login realizado com sucesso:', response.data);
+      // 3. Sucesso! O Supabase JÁ SALVOU o token no localStorage pra você automaticamente.
+      console.log('Login realizado com sucesso. Usuário:', data.user?.email);
+      
+      // Se quiser salvar o nome do usuário para exibir na tela (caso tenha salvo nos metadados):
+      // localStorage.setItem('userName', data.user?.user_metadata?.name || 'Admin');
+
       navigate('/dashboard');
-    } catch (err) {
+      
+    } catch (err: any) {
+      console.error(err);
       setError('E-mail ou senha incorretos!');
     } finally {
       setLoading(false);
@@ -42,18 +45,13 @@ export default function Login() {
   };
 
   return (
-    // Container Principal: Fundo levemente azulado/acinzentado para destacar o card
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-blue-50 p-4">
       
-      {/* O Card Branco */}
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
         
-        {/* Cabeçalho do Card (Fundo escuro para a logo brilhar) */}
         <div className="bg-gray-900 p-4 flex items-center justify-center h-32 relative overflow-hidden">
-            {/* Efeito de brilho sutil no fundo */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-blue-500/20 blur-3xl rounded-full pointer-events-none"></div>
             
-            {/* Nova Logo Tipográfica (Maior para a tela de login) */}
             <div className="flex items-center cursor-default select-none relative z-10">
                 <span className="text-4xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">
                     DR.
@@ -64,18 +62,15 @@ export default function Login() {
             </div>
         </div>
 
-        {/* Corpo do Formulário */}
         <div className="p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             
-            {/* Exibição de Erro */}
             {error && (
               <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
                 {error}
               </div>
             )}
 
-            {/* Input de Email */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">E-mail</label>
               <div className="relative">
@@ -91,7 +86,6 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Input de Senha */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Senha</label>
               <div className="relative">
@@ -112,7 +106,6 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Botão de Submit (Agora Azul) */}
             <button
               type="submit"
               disabled={loading}
@@ -133,7 +126,6 @@ export default function Login() {
           </form>
         </div>
         
-        {/* Rodapé do Card */}
         <div className="px-8 py-4 bg-slate-50 border-t border-gray-100 text-center">
           <p className="text-xs text-gray-500">
             © {new Date().getFullYear()} Dr. Imports Dashboard. Todos os direitos reservados.
