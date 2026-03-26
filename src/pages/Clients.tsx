@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Users, Save, User, Phone, Mail, Loader2, MapPin } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Save, User, Phone, Mail, Loader2, MapPin } from 'lucide-react';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
@@ -52,7 +52,7 @@ export default function Clients() {
       const { data, error } = await supabase
         .from('clients')
         .select('*')
-        .is('deleted_at', null) // Soft delete filter
+        .is('deleted_at', null)
         .order('name', { ascending: true });
 
       if (error) throw error;
@@ -100,6 +100,8 @@ export default function Clients() {
       text: "O cliente será arquivado.",
       icon: 'warning',
       showCancelButton: true,
+      cancelButtonText: 'Cancelar',
+      cancelButtonColor: '#3085d6',
       confirmButtonColor: '#d33',
       confirmButtonText: 'Sim, excluir'
     });
@@ -152,11 +154,11 @@ export default function Clients() {
 
   // --- BUSCA CEP AUTOMÁTICA ---
   const checkCEP = async (cep: string) => {
-    const cleanCEP = cep.replace(/\D/g, '');
-    if (cleanCEP.length !== 8) return;
+    const filteredCep = cep.replace(/\D/g, '');
+    if (filteredCep.length !== 8) return;
 
     try {
-      const response = await fetch(`https://viacep.com.br/ws/${cleanCEP}/json/`);
+      const response = await fetch(`https://viacep.com.br/ws/${filteredCep}/json/`);
       const data = await response.json();
 
       if (!data.erro) {

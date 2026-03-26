@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Edit, Trash2, Plane, Save, Calculator, DollarSign, Store, Calendar } from 'lucide-react';
-import api from '../services/api';
+import { Edit, Trash2, Plane, Save, Calculator, DollarSign, Store, Calendar, Loader2 } from 'lucide-react';
+import { supabase } from '../supabaseClient';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
@@ -9,9 +9,10 @@ import ProductLookup from '../components/ProductLookup';
 interface Product {
   id: number;
   name: string;
-  price: string;
+  price: number;
   stock_quantity: number;
   brand?: { name: string };
+  category?: { name: string };
 }
 
 interface Category { 
@@ -26,13 +27,13 @@ interface Brand {
 
 interface ImportRecord {
   id: number;
-  product?: Product;
+  product?: { name: string; price: number };
   product_id: number;
   quantity: number;
-  cost_price_usd: string;
-  exchange_rate: string;
-  extra_fees_brl: string;
-  total_cost_brl: string;
+  cost_price_usd: number;
+  exchange_rate: number;
+  extra_fees_brl: number;
+  total_cost_brl: number;
   store_name: string;
   import_date: string;
 }
@@ -40,13 +41,14 @@ interface ImportRecord {
 export default function Imports() {
   const [imports, setImports] = useState<ImportRecord[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isQuickProductModalOpen, setIsQuickProductModalOpen] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [brands, setBrands] = useState<Brand[]>([]);
 
   const [quickProduct, setQuickProduct] = useState({
     name: '',
@@ -70,7 +72,6 @@ export default function Imports() {
     selling_price_brl: ''
   });
 
-  // Estado para o painel de cálculo ao vivo
   const [calculated, setCalculated] = useState({
     totalUsd: 0,
     finalTotalBrl: 0,
@@ -79,13 +80,21 @@ export default function Imports() {
 
   // --- BUSCA INICIAL ---
   useEffect(() => {
-    fetchImports();
-    fetchProducts();
-    fetchCategories();
-    fetchBrands();
+    fetchInitialData();
   }, []);
 
-  // --- MOTOR MATEMÁTICO (Recalcula sempre que os inputs mudam) ---
+  const fetchInitialData = async () => {
+    setLoading(true);
+    await Promise.all([
+      fetchImports(),
+      fetchProducts(),
+      fetchCategories(),
+      fetchBrands()
+    ]);
+    setLoading(false);
+  };
+
+  // --- MOTOR MATEMÁTICO ---
   useEffect(() => {
     const qtd = Number(formData.quantity) || 0;
     const priceUsd = Number(formData.cost_price_usd) || 0;
@@ -100,22 +109,33 @@ export default function Imports() {
     setCalculated({ totalUsd, finalTotalBrl, finalUnitBrl });
   }, [formData]);
 
+  // --- FETCHERS SUPABASE ---
   const fetchImports = async () => {
     try {
-      const response = await api.get('/imports');
-      setImports(response.data.data || []);
-    } catch (error) {
-      console.error(error);
+      const { data, error } = await supabase
+        .from('imports')
+        .select(`
+          *,
+          product:product_id ( name, price )
+        `)
+        .order('import_date', { ascending: false });
 
-    } finally {
-      setLoading(false);
+      if (error) throw error;
+      setImports(data || []);
+    } catch (error: any) {
+      toast.error('Erro ao buscar importações: ' + error.message);
     }
   };
 
   const fetchProducts = async () => {
     try {
-      const response = await api.get('/products?all=true');
-      setProducts(response.data || []);
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .is('deleted_at', null)
+        .order('name');
+      if (error) throw error;
+      setProducts(data || []);
     } catch (error) {
       console.error(error);
     }
@@ -123,8 +143,8 @@ export default function Imports() {
 
   const fetchCategories = async () => {
     try {
-      const response = await api.get('/categories');
-      setCategories(response.data.data || []);
+      const { data } = await supabase.from('categories').select('id, name').is('deleted_at', null).order('name');
+      setCategories(data || []);
     } catch (error) {
       console.error(error);
     }
@@ -132,8 +152,8 @@ export default function Imports() {
 
   const fetchBrands = async () => {
     try {
-      const response = await api.get('/brands');
-      setBrands(response.data.data || []);
+      const { data } = await supabase.from('brands').select('id, name').is('deleted_at', null).order('name');
+      setBrands(data || []);
     } catch (error) {
       console.error(error);
     }
@@ -150,35 +170,37 @@ export default function Imports() {
     setFormData({
       product_id: record.product_id,
       quantity: record.quantity,
-      cost_price_usd: record.cost_price_usd,
-      exchange_rate: record.exchange_rate,
-      extra_fees_brl: record.extra_fees_brl || '',
+      cost_price_usd: record.cost_price_usd.toString(),
+      exchange_rate: record.exchange_rate.toString(),
+      extra_fees_brl: record.extra_fees_brl ? record.extra_fees_brl.toString() : '',
       store_name: record.store_name,
       import_date: record.import_date.substring(0, 10),
-      selling_price_brl: record.product?.price || ''
-    });''
+      selling_price_brl: record.product?.price.toString() || ''
+    });
     setIsModalOpen(true);
   };
 
   const handleDelete = async (id: number) => {
     const result = await Swal.fire({
       title: 'Tem certeza?',
-      text: "Esta importação será removida do histórico.",
+      text: "Esta importação será removida permanentemente.",
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#d33',
+      cancelButtonText: 'Cancelar',
       cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sim, excluir',
-      cancelButtonText: 'Cancelar'
+      confirmButtonColor: '#d33',
+      confirmButtonText: 'Sim, excluir'
     });
 
     if (result.isConfirmed) {
       try {
-        await api.delete(`/imports/${id}`);
+        const { error } = await supabase.from('imports').delete().eq('id', id);
+        if (error) throw error;
+        
         setImports(prev => prev.filter(i => i.id !== id));
         toast.success('Importação excluída!');
-      } catch (error) {
-
+      } catch (error: any) {
+        toast.error('Erro ao excluir: ' + error.message);
       }
     }
   };
@@ -189,20 +211,49 @@ export default function Imports() {
 
     setSaving(true);
     try {
-      const payload = { ...formData, total_cost_brl: calculated.finalTotalBrl };
+      // 1. Prepara os dados formatados
+      const payload = {
+        product_id: Number(formData.product_id),
+        quantity: Number(formData.quantity),
+        cost_price_usd: Number(formData.cost_price_usd),
+        exchange_rate: Number(formData.exchange_rate),
+        extra_fees_brl: Number(formData.extra_fees_brl) || 0,
+        total_cost_brl: calculated.finalTotalBrl,
+        store_name: formData.store_name,
+        import_date: formData.import_date
+      };
 
       if (editingId) {
-        await api.put(`/imports/${editingId}`, payload);
+        // Apenas atualiza o registro de importação
+        const { error } = await supabase.from('imports').update(payload).eq('id', editingId);
+        if (error) throw error;
         toast.success('Importação atualizada!');
       } else {
-        await api.post('/imports', payload);
-        toast.success('Importação registrada!');
+        // Cria a importação
+        const { error: importError } = await supabase.from('imports').insert([payload]);
+        if (importError) throw importError;
+
+        // Atualiza o Estoque e Preço do Produto
+        const productToUpdate = products.find(p => p.id === payload.product_id);
+        if (productToUpdate) {
+          const newStock = productToUpdate.stock_quantity + payload.quantity;
+          const newPrice = Number(formData.selling_price_brl) > 0 ? Number(formData.selling_price_brl) : productToUpdate.price;
+          
+          await supabase.from('products').update({
+            stock_quantity: newStock,
+            price: newPrice
+          }).eq('id', productToUpdate.id);
+        }
+
+        toast.success('Importação registrada e estoque atualizado!');
       }
 
       handleCloseModal();
+      // Atualiza ambas as listas para refletir as mudanças de estoque/preço
       fetchImports();
+      fetchProducts();
     } catch (error: any) {
-      console.error(error);
+      toast.error('Erro ao salvar: ' + error.message);
     } finally {
       setSaving(false);
     }
@@ -217,41 +268,7 @@ export default function Imports() {
     });
   };
 
-  const handleQuickProductSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      // Cria o produto no backend (Ajuste os campos conforme sua Migration de Produtos exigir)
-      const response = await api.post('/products', {
-        name: quickProduct.name,
-        stock_quantity: quickProduct.stock_quantity,
-        category_id: quickProduct.category_id || null,
-        brand_id: quickProduct.brand_id || null,
-        slug: quickProduct.slug,
-        price: 0
-      });
-
-      const newProduct = response.data; // Pega o produto recém-criado
-
-      toast.success('Produto criado com sucesso!');
-
-      // 1. Atualiza a lista de produtos no select
-      await fetchProducts();
-
-      // 2. Auto-seleciona o produto novo na importação atual! (A MÁGICA)
-      setFormData(prev => ({ ...prev, product_id: newProduct.id }));
-
-      // 3. Fecha o mini-modal
-      setIsQuickProductModalOpen(false);
-      setQuickProduct({ name: '', price: 0, stock_quantity: 0, category_id: 0, brand_id: 0, slug: '' });
-
-    } catch (error) {
-
-    } finally {
-      setSaving(false);
-    }
-  };
-
+  // --- QUICK PRODUCT HANDLERS ---
   const generateSlug = (text: string) => {
     return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
   };
@@ -260,10 +277,47 @@ export default function Imports() {
     const { name, value } = e.target;
     setQuickProduct(prev => {
       const newData = { ...prev, [name]: value };
-      // Se o campo alterado for o Nome, gera o Slug automaticamente
       if (name === 'name') newData.slug = generateSlug(value);
       return newData;
     });
+  };
+
+  const handleQuickProductSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const productPayload = {
+        name: quickProduct.name,
+        slug: quickProduct.slug,
+        stock_quantity: Number(quickProduct.stock_quantity) || 0,
+        category_id: Number(quickProduct.category_id) || null,
+        brand_id: Number(quickProduct.brand_id) || null,
+        price: Number(quickProduct.price) || 0
+      };
+
+      const { data: newProduct, error } = await supabase
+        .from('products')
+        .insert([productPayload])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast.success('Produto criado com sucesso!');
+      await fetchProducts();
+      
+      // Auto-seleciona o produto na importação atual
+      if (newProduct) {
+        setFormData(prev => ({ ...prev, product_id: newProduct.id, selling_price_brl: newProduct.price.toString() }));
+      }
+
+      setIsQuickProductModalOpen(false);
+      setQuickProduct({ name: '', price: 0, stock_quantity: 0, category_id: 0, brand_id: 0, slug: '' });
+    } catch (error: any) {
+      toast.error('Erro ao criar produto: ' + error.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Formatadores
@@ -280,14 +334,14 @@ export default function Imports() {
           <h1 className="text-2xl font-bold text-gray-800">Importações</h1>
           <p className="text-gray-500">Histórico de compras e controle de custos</p>
         </div>
-        <button onClick={() => { setEditingId(null); setIsModalOpen(true); }} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+        <button onClick={() => { setEditingId(null); setIsModalOpen(true); }} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-blue-600/20">
           <Plane size={20} /> Nova Importação
         </button>
       </div>
 
       {/* Tabela */}
       {loading ? (
-        <div className="flex justify-center h-64 items-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>
+        <div className="flex justify-center h-64 items-center"><Loader2 className="animate-spin h-10 w-10 text-blue-600" /></div>
       ) : (
         <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
           <table className="w-full text-left border-collapse">
@@ -304,10 +358,10 @@ export default function Imports() {
               {imports.map((record) => (
                 <tr key={record.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-sm text-gray-600">
-                    <div className="flex items-center gap-2"><Calendar size={16} /> {formatDate(record.import_date)}</div>
+                    <div className="flex items-center gap-2"><Calendar size={16} className="text-gray-400" /> {formatDate(record.import_date)}</div>
                   </td>
                   <td className="px-6 py-4">
-                    <p className="font-medium text-gray-900">{record.product?.name || 'Produto Excluído'}</p>
+                    <p className="font-medium text-gray-900">{record.product?.name || 'Produto Excluído/Indisponível'}</p>
                     <p className="text-xs text-gray-500 flex items-center gap-1 mt-1"><Store size={12} /> {record.store_name}</p>
                   </td>
                   <td className="px-6 py-4">
@@ -317,19 +371,20 @@ export default function Imports() {
                     {formatBRL(record.total_cost_brl)}
                   </td>
                   <td className="px-6 py-4 text-right space-x-2">
-                    <button onClick={() => handleEdit(record)} className="text-gray-400 hover:text-blue-600 p-1"><Edit size={18} /></button>
-                    <button onClick={() => handleDelete(record.id)} className="text-gray-400 hover:text-red-600 p-1"><Trash2 size={18} /></button>
+                    <button onClick={() => handleEdit(record)} className="text-gray-400 hover:text-blue-600 p-1 transition-colors"><Edit size={18} /></button>
+                    <button onClick={() => handleDelete(record.id)} className="text-gray-400 hover:text-red-600 p-1 transition-colors"><Trash2 size={18} /></button>
                   </td>
                 </tr>
               ))}
               {imports.length === 0 && (
-                <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-500">Nenhuma importação registrada.</td></tr>
+                <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-500 italic">Nenhuma importação registrada.</td></tr>
               )}
             </tbody>
           </table>
         </div>
       )}
 
+      {/* MODAL DE IMPORTAÇÃO */}
       <Modal
         title={editingId ? "Editar Importação" : "Registrar Nova Importação"}
         isOpen={isModalOpen}
@@ -346,19 +401,15 @@ export default function Imports() {
                 products={products}
                 selectedId={formData.product_id}
                 onSelect={(id) => {
-                  // Acha o produto selecionado
                   const selectedProd = products.find(p => p.id === id);
-
                   setFormData(prev => ({
                     ...prev,
                     product_id: id,
-                    // Se achou o produto, joga o preço atual dele no input
-                    selling_price_brl: selectedProd?.price || ''
+                    selling_price_brl: selectedProd?.price.toString() || ''
                   }));
                 }}
                 onAddNew={(search) => {
-                  // O código real que estava escondido pelos "..."
-                  setQuickProduct(prev => ({ ...prev, name: search }));
+                  setQuickProduct(prev => ({ ...prev, name: search, slug: generateSlug(search) }));
                   setIsQuickProductModalOpen(true);
                 }}
               />
@@ -419,42 +470,45 @@ export default function Imports() {
             </div>
           </div>
 
-          {/* --- NOVIDADE: DEFINIÇÃO DE PREÇO APÓS O CUSTO --- */}
-           <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between gap-4 mt-4">
-               <div className="flex-1">
-                   <label className="block text-sm font-bold text-gray-800 mb-1">Definir Novo Preço de Venda (R$)</label>
-                   <p className="text-xs text-gray-500 mb-2">Este valor atualizará o cadastro do produto na loja.</p>
-                   <input 
+          {/* --- DEFINIÇÃO DE PREÇO APÓS O CUSTO --- */}
+          {!editingId && (
+            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between gap-4 mt-4">
+                <div className="flex-1">
+                    <label className="block text-sm font-bold text-gray-800 mb-1">Definir Novo Preço de Venda (R$)</label>
+                    <p className="text-xs text-gray-500 mb-2">Este valor atualizará o cadastro do produto na loja.</p>
+                    <input 
                       type="number" step="0.01" name="selling_price_brl" 
                       value={formData.selling_price_brl} 
                       onChange={handleInputChange} 
                       className="w-full sm:w-1/2 px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500 text-lg font-semibold text-green-700" 
                       placeholder="Ex: 150.00"
-                   />
-               </div>
-               
-               {/* Lucro estimado ao vivo */}
-               {Number(formData.selling_price_brl) > calculated.finalUnitBrl && (
-                 <div className="text-right bg-green-50 p-3 rounded-lg border border-green-100 hidden sm:block">
+                    />
+                </div>
+                
+                {Number(formData.selling_price_brl) > calculated.finalUnitBrl && (
+                  <div className="text-right bg-green-50 p-3 rounded-lg border border-green-100 hidden sm:block">
                     <p className="text-xs text-green-600 font-semibold uppercase">Lucro Estimado / Unid.</p>
                     <p className="text-xl font-bold text-green-700">
                         {formatBRL(Number(formData.selling_price_brl) - calculated.finalUnitBrl)}
                     </p>
-                 </div>
-               )}
-           </div>
+                  </div>
+                )}
+            </div>
+          )}
 
           {/* Footer */}
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
             <button type="button" onClick={handleCloseModal} className="px-5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors">
               Cancelar
             </button>
-            <button type="submit" disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center gap-2 font-medium disabled:opacity-70 transition-colors shadow-sm">
-              {saving ? 'Registrando...' : <><Save size={18} /> {editingId ? 'Atualizar Compra' : 'Registrar Compra'}</>}
+            <button type="submit" disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center gap-2 font-medium disabled:opacity-70 transition-all active:scale-95 shadow-md shadow-blue-600/20">
+              {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+              {saving ? 'Registrando...' : editingId ? 'Atualizar Compra' : 'Registrar Compra'}
             </button>
           </div>
         </form>
       </Modal>
+
       {/* --- MINI MODAL DE CADASTRO RÁPIDO DE PRODUTO --- */}
       <Modal
         title="Cadastro Rápido de Produto"
@@ -505,9 +559,10 @@ export default function Imports() {
           </div>
    
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-2">
-            <button type="button" onClick={() => setIsQuickProductModalOpen(false)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg">Cancelar</button>
-            <button type="submit" disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-              {saving ? 'Salvando...' : <><Save size={18} /> Salvar </>}
+            <button type="button" onClick={() => setIsQuickProductModalOpen(false)} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">Cancelar</button>
+            <button type="submit" disabled={saving} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all active:scale-95">
+              {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+              {saving ? 'Salvando...' : 'Salvar'}
             </button>
           </div>
         </form>
