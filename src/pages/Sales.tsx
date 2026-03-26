@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, ShoppingCart, Save, DollarSign, Calendar, User, Loader2, Filter, Tag, Package } from 'lucide-react';
+import { Search, Trash2, ShoppingCart, Save, Calendar, Loader2, Filter, Package } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { NumericFormat } from 'react-number-format';
 import Modal from '../components/Modal';
 import ProductLookup from '../components/ProductLookup';
 import toast from 'react-hot-toast';
@@ -40,7 +41,7 @@ export default function Sales() {
     client_id: 0,
     product_id: 0,
     quantity: 1,
-    unit_price: '',
+    unit_price: '' as number | string,
     sale_date: today,
     type: 'venda' as 'venda' | 'doacao' | 'brinde' | 'perda'
   });
@@ -105,7 +106,7 @@ export default function Sales() {
         client_id: formData.type === 'perda' ? null : Number(formData.client_id),
         product_id: Number(formData.product_id),
         quantity: Number(formData.quantity),
-        unit_price: isNonRevenue ? 0 : Number(formData.unit_price),
+        unit_price: isNonRevenue ? 0 : Number(formData.unit_price) || 0,
         total_price: isNonRevenue ? 0 : totalPrice,
         sale_date: formData.sale_date,
         type: formData.type
@@ -205,7 +206,7 @@ export default function Sales() {
           <h1 className="text-2xl font-bold text-gray-800">Vendas e Saídas</h1>
           <p className="text-gray-500">Gestão financeira e de inventário</p>
         </div>
-        <button onClick={() => setIsModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg shadow-green-600/20 transition-all active:scale-95">
+        <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg shadow-blue-600/20 transition-all active:scale-95">
           <ShoppingCart size={20} /> Nova Operação
         </button>
       </div>
@@ -217,7 +218,7 @@ export default function Sales() {
           <input 
             type="text" 
             placeholder="Pesquisar cliente ou produto..." 
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 outline-none"
+            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -225,7 +226,7 @@ export default function Sales() {
         <div className="flex items-center gap-2">
           <Filter size={20} className="text-gray-400" />
           <select 
-            className="border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-green-500 bg-white"
+            className="border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
           >
@@ -240,7 +241,7 @@ export default function Sales() {
 
       {/* Tabela de Resultados */}
       {loading ? (
-        <div className="flex justify-center h-64 items-center"><Loader2 className="animate-spin h-10 w-10 text-green-600" /></div>
+        <div className="flex justify-center h-64 items-center"><Loader2 className="animate-spin h-10 w-10 text-blue-600" /></div>
       ) : (
         <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
           <div className="overflow-x-auto">
@@ -275,7 +276,7 @@ export default function Sales() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <span className={`font-bold ${sale.total_price > 0 ? 'text-green-600' : 'text-gray-400'}`}>
+                        <span className={`font-bold ${sale.total_price > 0 ? 'text-gray-900' : 'text-gray-400'}`}>
                           {formatBRL(sale.total_price)}
                         </span>
                       </td>
@@ -289,6 +290,7 @@ export default function Sales() {
                       </td>
                     </tr>
                   ))}
+                  {filteredSales.length === 0 && <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-500 italic">Nenhuma operação encontrada.</td></tr>}
                 </tbody>
             </table>
           </div>
@@ -334,7 +336,7 @@ export default function Sales() {
                 setFormData(prev => ({ 
                   ...prev, 
                   product_id: id,
-                  unit_price: formData.type === 'venda' ? selectedProd?.price.toString() || '' : '0'
+                  unit_price: formData.type === 'venda' ? selectedProd?.price ?? '' : 0
                 }));
               }} 
             />
@@ -353,10 +355,21 @@ export default function Sales() {
               <>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Preço Unitário (R$)</label>
-                  <div className="relative">
-                    <DollarSign size={16} className="absolute left-3 top-3 text-gray-400" />
-                    <input type="number" step="0.01" name="unit_price" value={formData.unit_price} onChange={handleInputChange} className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500 font-bold" required />
-                  </div>
+                  <NumericFormat
+                    name="unit_price"
+                    value={formData.unit_price}
+                    thousandSeparator="."
+                    decimalSeparator=","
+                    prefix="R$ "
+                    decimalScale={2}
+                    allowNegative={false}
+                    onValueChange={(values) => {
+                      setFormData(prev => ({ ...prev, unit_price: values.floatValue ?? '' }));
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500 font-bold"
+                    placeholder="R$ 0,00"
+                    required
+                  />
                 </div>
                 <div className="flex flex-col justify-end">
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Total da Venda</label>
@@ -373,8 +386,8 @@ export default function Sales() {
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-            <button type="button" onClick={handleCloseModal} className="px-5 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg">Cancelar</button>
-            <button type="submit" disabled={saving} className={`px-8 py-2 rounded-lg flex items-center gap-2 font-bold transition-all active:scale-95 shadow-md disabled:opacity-70 ${formData.type === 'venda' ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-orange-600 hover:bg-orange-700 text-white'}`}>
+            <button type="button" onClick={handleCloseModal} className="px-5 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors">Cancelar</button>
+            <button type="submit" disabled={saving} className={`px-8 py-2 rounded-lg flex items-center gap-2 font-bold transition-all active:scale-95 shadow-md disabled:opacity-70 ${formData.type === 'venda' ? 'bg-green-600 hover:bg-green-700 text-white shadow-green-600/20' : 'bg-orange-600 hover:bg-orange-700 text-white shadow-orange-600/20'}`}>
               {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
               {saving ? 'Processando...' : formData.type === 'venda' ? 'Finalizar Venda' : 'Confirmar Saída'}
             </button>

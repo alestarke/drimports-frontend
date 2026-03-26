@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Edit, Trash2, Plane, Save, Calculator, DollarSign, Store, Calendar, Loader2 } from 'lucide-react';
+import { Edit, Trash2, Plane, Save, Calculator, Store, Calendar, Loader2, Package } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import ProductLookup from '../components/ProductLookup';
+import { NumericFormat } from 'react-number-format';
 
 interface Product {
   id: number;
@@ -64,12 +65,12 @@ export default function Imports() {
   const [formData, setFormData] = useState({
     product_id: 0,
     quantity: 1,
-    cost_price_usd: '',
-    exchange_rate: '',
-    extra_fees_brl: '',
+    cost_price_usd: '' as number | string,
+    exchange_rate: '' as number | string,
+    extra_fees_brl: '' as number | string,
     store_name: '',
     import_date: today,
-    selling_price_brl: ''
+    selling_price_brl: '' as number | string
   });
 
   const [calculated, setCalculated] = useState({
@@ -170,12 +171,12 @@ export default function Imports() {
     setFormData({
       product_id: record.product_id,
       quantity: record.quantity,
-      cost_price_usd: record.cost_price_usd.toString(),
-      exchange_rate: record.exchange_rate.toString(),
-      extra_fees_brl: record.extra_fees_brl ? record.extra_fees_brl.toString() : '',
+      cost_price_usd: record.cost_price_usd || '',
+      exchange_rate: record.exchange_rate || '',
+      extra_fees_brl: record.extra_fees_brl || '',
       store_name: record.store_name,
       import_date: record.import_date.substring(0, 10),
-      selling_price_brl: record.product?.price.toString() || ''
+      selling_price_brl: record.product?.price || ''
     });
     setIsModalOpen(true);
   };
@@ -211,12 +212,11 @@ export default function Imports() {
 
     setSaving(true);
     try {
-      // 1. Prepara os dados formatados
       const payload = {
         product_id: Number(formData.product_id),
         quantity: Number(formData.quantity),
-        cost_price_usd: Number(formData.cost_price_usd),
-        exchange_rate: Number(formData.exchange_rate),
+        cost_price_usd: Number(formData.cost_price_usd) || 0,
+        exchange_rate: Number(formData.exchange_rate) || 0,
         extra_fees_brl: Number(formData.extra_fees_brl) || 0,
         total_cost_brl: calculated.finalTotalBrl,
         store_name: formData.store_name,
@@ -224,16 +224,13 @@ export default function Imports() {
       };
 
       if (editingId) {
-        // Apenas atualiza o registro de importação
         const { error } = await supabase.from('imports').update(payload).eq('id', editingId);
         if (error) throw error;
         toast.success('Importação atualizada!');
       } else {
-        // Cria a importação
         const { error: importError } = await supabase.from('imports').insert([payload]);
         if (importError) throw importError;
 
-        // Atualiza o Estoque e Preço do Produto
         const productToUpdate = products.find(p => p.id === payload.product_id);
         if (productToUpdate) {
           const newStock = productToUpdate.stock_quantity + payload.quantity;
@@ -249,7 +246,6 @@ export default function Imports() {
       }
 
       handleCloseModal();
-      // Atualiza ambas as listas para refletir as mudanças de estoque/preço
       fetchImports();
       fetchProducts();
     } catch (error: any) {
@@ -306,9 +302,8 @@ export default function Imports() {
       toast.success('Produto criado com sucesso!');
       await fetchProducts();
       
-      // Auto-seleciona o produto na importação atual
       if (newProduct) {
-        setFormData(prev => ({ ...prev, product_id: newProduct.id, selling_price_brl: newProduct.price.toString() }));
+        setFormData(prev => ({ ...prev, product_id: newProduct.id, selling_price_brl: newProduct.price }));
       }
 
       setIsQuickProductModalOpen(false);
@@ -393,7 +388,7 @@ export default function Imports() {
       >
         <form onSubmit={handleSave} className="space-y-6">
 
-          {/* LINHA 1: Informações Básicas (Produto, Loja e Data) */}
+          {/* LINHA 1: Informações Básicas */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
             <div className="md:col-span-5">
               <label className="block text-sm font-medium text-gray-700 mb-1">Produto Importado</label>
@@ -405,7 +400,7 @@ export default function Imports() {
                   setFormData(prev => ({
                     ...prev,
                     product_id: id,
-                    selling_price_brl: selectedProd?.price.toString() || ''
+                    selling_price_brl: selectedProd?.price || ''
                   }));
                 }}
                 onAddNew={(search) => {
@@ -426,7 +421,7 @@ export default function Imports() {
 
           <div className="border-t border-gray-200"></div>
 
-          {/* LINHA 2: Finanças (Quantidade, Custos e Taxas) */}
+          {/* LINHA 2: Finanças (Quantidade, Custos e Taxas) com React Number Format */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Quantidade (un.)</label>
@@ -434,18 +429,50 @@ export default function Imports() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Custo Unitário (USD)</label>
-              <div className="relative">
-                <DollarSign size={16} className="absolute left-3 top-3 text-gray-400" />
-                <input type="number" step="0.01" name="cost_price_usd" value={formData.cost_price_usd} onChange={handleInputChange} className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" required />
-              </div>
+              <NumericFormat
+                name="cost_price_usd"
+                value={formData.cost_price_usd}
+                thousandSeparator="."
+                decimalSeparator=","
+                prefix="US$ "
+                decimalScale={2}
+                allowNegative={false}
+                onValueChange={(values) => setFormData(prev => ({ ...prev, cost_price_usd: values.floatValue ?? '' }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="US$ 0,00"
+                required
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Cotação Dólar (R$)</label>
-              <input type="number" step="0.0001" name="exchange_rate" value={formData.exchange_rate} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-blue-50" placeholder="Ex: 5.1230" required />
+              <NumericFormat
+                name="exchange_rate"
+                value={formData.exchange_rate}
+                thousandSeparator="."
+                decimalSeparator=","
+                prefix="R$ "
+                decimalScale={4}
+                allowNegative={false}
+                onValueChange={(values) => setFormData(prev => ({ ...prev, exchange_rate: values.floatValue ?? '' }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-blue-50"
+                placeholder="R$ 0,0000"
+                required
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Taxas Extras (R$)</label>
-              <input type="number" step="0.01" name="extra_fees_brl" value={formData.extra_fees_brl} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-red-300 text-red-600" placeholder="0.00" />
+              <NumericFormat
+                name="extra_fees_brl"
+                value={formData.extra_fees_brl}
+                thousandSeparator="."
+                decimalSeparator=","
+                prefix="R$ "
+                decimalScale={2}
+                allowNegative={false}
+                onValueChange={(values) => setFormData(prev => ({ ...prev, extra_fees_brl: values.floatValue ?? '' }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-red-300 text-red-600"
+                placeholder="R$ 0,00"
+              />
             </div>
           </div>
 
@@ -470,18 +497,23 @@ export default function Imports() {
             </div>
           </div>
 
-          {/* --- DEFINIÇÃO DE PREÇO APÓS O CUSTO --- */}
+          {/* --- DEFINIÇÃO DE PREÇO APÓS O CUSTO (Com React Number Format) --- */}
           {!editingId && (
             <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between gap-4 mt-4">
                 <div className="flex-1">
                     <label className="block text-sm font-bold text-gray-800 mb-1">Definir Novo Preço de Venda (R$)</label>
                     <p className="text-xs text-gray-500 mb-2">Este valor atualizará o cadastro do produto na loja.</p>
-                    <input 
-                      type="number" step="0.01" name="selling_price_brl" 
-                      value={formData.selling_price_brl} 
-                      onChange={handleInputChange} 
-                      className="w-full sm:w-1/2 px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500 text-lg font-semibold text-green-700" 
-                      placeholder="Ex: 150.00"
+                    <NumericFormat
+                      name="selling_price_brl"
+                      value={formData.selling_price_brl}
+                      thousandSeparator="."
+                      decimalSeparator=","
+                      prefix="R$ "
+                      decimalScale={2}
+                      allowNegative={false}
+                      onValueChange={(values) => setFormData(prev => ({ ...prev, selling_price_brl: values.floatValue ?? '' }))}
+                      className="w-full sm:w-1/2 px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500 text-lg font-semibold text-green-700"
+                      placeholder="R$ 0,00"
                     />
                 </div>
                 
@@ -517,8 +549,9 @@ export default function Imports() {
         maxWidth="max-w-md"
       >
         <form onSubmit={handleQuickProductSave} className="space-y-4">
-          <div className="bg-blue-50 text-blue-800 p-3 rounded-lg text-sm mb-4">
-            Cadastre o básico agora para continuar sua importação. Você pode enriquecer os detalhes deste produto depois na aba "Produtos".
+          <div className="bg-blue-50 text-blue-800 p-3 rounded-lg text-sm mb-4 flex items-start gap-2">
+             <Package size={18} className="mt-0.5 shrink-0"/>
+             <span>Cadastre o básico agora para continuar sua importação. Você pode enriquecer os detalhes na aba "Produtos".</span>
           </div>
 
           <div>
