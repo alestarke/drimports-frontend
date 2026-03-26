@@ -70,6 +70,7 @@ export default function Sales() {
       const { data, error } = await supabase
         .from('sales')
         .select(`*, client:client_id ( name ), product:product_id ( name )`)
+        .is('deleted_at', null)
         .order('sale_date', { ascending: false });
       if (error) throw error;
       setSales(data || []);
@@ -156,7 +157,7 @@ export default function Sales() {
             await supabase.from('products').update({ stock_quantity: prod.stock_quantity + saleToDelete.quantity }).eq('id', saleToDelete.product_id);
           }
         }
-        await supabase.from('sales').delete().eq('id', id);
+        await supabase.from('sales').update({ deleted_at: new Date().toISOString() }).eq('id', id);
         setSales(prev => prev.filter(s => s.id !== id));
         fetchProducts();
         toast.success('Cancelada e estoque estornado!');
@@ -182,10 +183,17 @@ export default function Sales() {
   const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 
   const typeStyles: any = {
-    venda: 'bg-green-100 text-green-700',
-    doacao: 'bg-blue-100 text-blue-700',
-    brinde: 'bg-purple-100 text-purple-700',
-    perda: 'bg-red-100 text-red-700'
+    venda: 'bg-green-100 text-green-700 border-green-200',
+    doacao: 'bg-orange-100 text-orange-800 border-orange-200',
+    brinde: 'bg-blue-100 text-blue-700 border-blue-200',
+    perda: 'bg-red-100 text-red-700 border-red-200'
+  };
+
+  const typeLabels: any = {
+    venda: 'Venda',
+    doacao: 'Doação',
+    brinde: 'Brinde',
+    perda: 'Perda'
   };
 
   return (
@@ -263,7 +271,7 @@ export default function Sales() {
                       </td>
                       <td className="px-6 py-4">
                         <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${typeStyles[sale.type]}`}>
-                          {sale.type}
+                          {typeLabels[sale.type]}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
