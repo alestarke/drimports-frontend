@@ -235,19 +235,19 @@ export default function Products() {
                         <div className="bg-blue-100 p-2 rounded-lg text-blue-600"><Package size={24} /></div>
                         <div>
                           <p className="font-medium text-gray-900">{product.name}</p>
-                          <p className="text-xs text-gray-500 uppercase">{product.brand?.name || 'Sem Marca'} • {product.category?.name || 'Sem Categoria'}</p>
+                          <p className="text-xs text-gray-500 capitalize">{product.brand?.name?.toLowerCase() || 'Sem marca'} • {product.category?.name?.toLowerCase() || 'Sem categoria'}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 font-medium text-gray-900">{formatCurrency(product.price)}</td>
                     <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${product.stock_quantity > 5 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${product.stock_quantity === 0 ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
                         {product.stock_quantity} unidades
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
-                      <button onClick={() => handleEditProduct(product)} className="text-gray-400 hover:text-blue-600 transition-colors"><Edit size={18} /></button>
-                      <button onClick={() => handleDeleteProduct(product.id)} className="text-gray-400 hover:text-red-600 transition-colors"><Trash2 size={18} /></button>
+                        <button title="Editar Produto" onClick={() => handleEditProduct(product)} className="text-gray-400 hover:text-blue-600 transition-colors"><Edit size={18} /></button>
+                        <button title="Remover Produto" onClick={() => handleDeleteProduct(product.id)} className="text-gray-400 hover:text-red-600 transition-colors"><Trash2 size={18} /></button>
                     </td>
                   </tr>
                 ))}

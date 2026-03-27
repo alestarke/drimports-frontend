@@ -10,6 +10,7 @@ import Imports from './pages/Imports';
 import Clients from './pages/Clients';
 import Sales from './pages/Sales';
 import Users from './pages/Users';
+import Settings from './pages/Settings';
 
 function App() {
   return (
@@ -67,6 +68,12 @@ function App() {
         <Route path="/sales" element={
           <ProtectedRoute>
             <Dashboard><Sales /></Dashboard>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <Dashboard><Settings /></Dashboard>
           </ProtectedRoute>
         } />
 

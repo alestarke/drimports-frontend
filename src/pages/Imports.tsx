@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Edit, Trash2, Plane, Save, Calculator, Store, Calendar, Loader2, Package } from 'lucide-react';
+import { Edit, Trash2, Save, Calculator, Store, Calendar, Loader2, Package, Plus } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
@@ -39,6 +39,20 @@ interface ImportRecord {
   import_date: string;
 }
 
+// --- BUSCA DA COTAÇÃO PADRÃO ---
+const getDefaultDollarRate = () => {
+  try {
+    const savedPrefs = localStorage.getItem('drimports_prefs');
+    if (savedPrefs) {
+      const { defaultDollar } = JSON.parse(savedPrefs);
+      return defaultDollar ? Number(defaultDollar) : '';
+    }
+  } catch (e) {
+    console.error(e);
+  }
+  return '';
+};
+
 export default function Imports() {
   const [imports, setImports] = useState<ImportRecord[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -66,7 +80,7 @@ export default function Imports() {
     product_id: 0,
     quantity: 1,
     cost_price_usd: '' as number | string,
-    exchange_rate: '' as number | string,
+    exchange_rate: getDefaultDollarRate() as number | string,
     extra_fees_brl: '' as number | string,
     store_name: '',
     import_date: today,
@@ -259,8 +273,14 @@ export default function Imports() {
     setIsModalOpen(false);
     setEditingId(null);
     setFormData({
-      product_id: 0, quantity: 1, cost_price_usd: '', exchange_rate: '',
-      extra_fees_brl: '', store_name: '', import_date: today, selling_price_brl: ''
+      product_id: 0, 
+      quantity: 1, 
+      cost_price_usd: '', 
+      exchange_rate: getDefaultDollarRate(),
+      extra_fees_brl: '', 
+      store_name: '', 
+      import_date: today, 
+      selling_price_brl: ''
     });
   };
 
@@ -330,7 +350,7 @@ export default function Imports() {
           <p className="text-gray-500">Histórico de compras e controle de custos</p>
         </div>
         <button onClick={() => { setEditingId(null); setIsModalOpen(true); }} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-blue-600/20">
-          <Plane size={20} /> Nova Importação
+          <Plus size={20} /> Nova Importação
         </button>
       </div>
 

@@ -268,7 +268,7 @@ export default function Users() {
                     <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-white ${user.is_admin ? 'bg-indigo-600' : 'bg-gray-400'}`}>
+                          <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-white ${user.is_admin ? 'bg-blue-600' : 'bg-gray-400'}`}>
                             {user.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
@@ -279,7 +279,7 @@ export default function Users() {
                       </td>
                       <td className="px-6 py-4">
                         {user.is_admin ? (
-                          <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 w-fit border border-indigo-200">
+                          <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 w-fit border border-blue-200">
                             <ShieldAlert size={14} /> Administrador
                           </span>
                         ) : (
@@ -403,10 +403,10 @@ export default function Users() {
                     name="role" 
                     checked={formData.is_admin} 
                     onChange={() => handleRoleChange(true)} 
-                    className="mt-1 w-4 h-4 text-indigo-600 focus:ring-indigo-600" 
+                    className="mt-1 w-4 h-4 text-blue-600 focus:ring-blue-600" 
                   />
                   <div>
-                    <p className="font-medium text-indigo-900">Administrador</p>
+                    <p className="font-medium text-blue-900">Administrador</p>
                     <p className="text-xs text-gray-500">Acesso total ao sistema. Pode excluir histórico e adicionar/remover membros da equipe.</p>
                   </div>
                 </label>

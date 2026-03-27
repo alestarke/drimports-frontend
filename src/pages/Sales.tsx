@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Trash2, ShoppingCart, Save, Calendar, Loader2, Filter, Package } from 'lucide-react';
+import { Search, Trash2, Save, Calendar, Loader2, Filter, Package, Plus } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { NumericFormat } from 'react-number-format';
 import Modal from '../components/Modal';
@@ -207,7 +207,7 @@ export default function Sales() {
           <p className="text-gray-500">Gestão financeira e de inventário</p>
         </div>
         <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg shadow-blue-600/20 transition-all active:scale-95">
-          <ShoppingCart size={20} /> Nova Operação
+          <Plus size={20} /> Nova Operação
         </button>
       </div>
 
