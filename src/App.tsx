@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
@@ -8,7 +9,7 @@ import Categories from './pages/Categories';
 import Imports from './pages/Imports';
 import Clients from './pages/Clients';
 import Sales from './pages/Sales';
-import ProtectedRoute from './components/ProtectedRoute';
+import Users from './pages/Users';
 
 function App() {
   return (
@@ -54,6 +55,12 @@ function App() {
         <Route path="/clients" element={
           <ProtectedRoute>
             <Dashboard><Clients /></Dashboard>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/users" element={
+          <ProtectedRoute>
+            <Dashboard><Users /></Dashboard>
           </ProtectedRoute>
         } />
         
