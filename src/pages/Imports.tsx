@@ -206,10 +206,10 @@ export default function Imports() {
       confirmButtonColor: '#d33',
       confirmButtonText: 'Sim, excluir'
     });
-
+    
     if (result.isConfirmed) {
       try {
-        const { error } = await supabase.from('imports').delete().eq('id', id);
+        const { error } = await supabase.from('imports').update({ deleted_at: new Date().toISOString() }).eq('id', id);
         if (error) throw error;
         
         setImports(prev => prev.filter(i => i.id !== id));
