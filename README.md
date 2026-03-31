@@ -76,3 +76,18 @@ Siga os passos abaixo para rodar o projeto na sua máquina:
    ```bash
    npm run dev
    ```
+   
+## 🐳 Docker (Ambiente de Desenvolvimento)
+
+Este projeto está containerizado para facilitar o setup do ambiente.
+
+1.  **Build da Imagem:**
+    ```bash
+    docker build -t drimports-dev .
+    ```
+
+2.  **Rodar o Container:**
+    ```bash
+    docker run -p 5173:5173 --env-file .env drimports-dev
+    ```
+    *O sistema estará disponível em `http://localhost:5173`*

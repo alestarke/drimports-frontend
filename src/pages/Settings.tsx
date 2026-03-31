@@ -128,8 +128,6 @@ export default function Settings() {
     });
 
     if (result.isConfirmed) {
-      // Aqui você colocaria a lógica de Hard Delete ou Soft Delete em massa.
-      // Exemplo: await supabase.from('sales').delete().neq('id', 0);
       toast.success('Simulação: Dados apagados com sucesso.');
     }
   };

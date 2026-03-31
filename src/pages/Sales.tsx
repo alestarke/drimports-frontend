@@ -7,8 +7,8 @@ import ProductLookup from '../components/ProductLookup';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 
-// --- INTERFACES ---
 interface Client { id: number; name: string; }
+
 interface Product { id: number; name: string; price: number; stock_quantity: number; }
 interface Sale {
   id: number;

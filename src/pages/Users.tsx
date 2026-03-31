@@ -5,7 +5,6 @@ import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 
-// --- INTERFACES ---
 interface SystemUser {
   id: string; 
   name: string;
@@ -19,16 +18,10 @@ export default function Users() {
   const [users, setUsers] = useState<SystemUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // --- SEGURANÇA: Identifica o usuário logado atualmente ---
   const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
-  
-  // Estados do Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  
-  // Estado para visualização da senha
   const [showPassword, setShowPassword] = useState(false);
 
   const [formData, setFormData] = useState({

@@ -16,26 +16,16 @@ export default function Login() {
     setError('');
 
     try {
-      // 1. Chamada nativa do Supabase para login
       const { data, error: supabaseError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      // 2. O Supabase não joga a requisição pro catch automaticamente se a senha estiver errada,
-      // ele retorna um objeto de erro. Precisamos checar isso:
-      if (supabaseError) {
-        throw supabaseError;
-      }
-
-      // 3. Sucesso! O Supabase JÁ SALVOU o token no localStorage pra você automaticamente.
+      if (supabaseError) throw supabaseError;
+      
       console.log('Login realizado com sucesso. Usuário:', data.user?.email);
       
-      // Se quiser salvar o nome do usuário para exibir na tela (caso tenha salvo nos metadados):
-      // localStorage.setItem('userName', data.user?.user_metadata?.name || 'Admin');
-
       navigate('/dashboard');
-      
     } catch (err: any) {
       console.error(err);
       setError('E-mail ou senha incorretos!');

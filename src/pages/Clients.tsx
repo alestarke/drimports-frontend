@@ -45,7 +45,6 @@ export default function Clients() {
     fetchClients();
   }, []);
 
-  // --- BUSCAR CLIENTES ---
   const fetchClients = async () => {
     setLoading(true);
     try {
@@ -64,7 +63,7 @@ export default function Clients() {
     }
   };
 
-  // --- SALVAR / ATUALIZAR ---
+  // --- AÇÕES DO CRUD ---
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -93,7 +92,6 @@ export default function Clients() {
     }
   };
 
-  // --- DELETE (SOFT DELETE) ---
   const handleDelete = async (id: number) => {
     const result = await Swal.fire({
       title: 'Tem certeza?',
@@ -134,7 +132,6 @@ export default function Clients() {
     setFormData(initialForm);
   };
 
-  // --- FILTRO DE BUSCA NO FRONTEND ---
   const filteredClients = clients.filter(client => 
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||

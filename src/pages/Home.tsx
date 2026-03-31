@@ -18,7 +18,6 @@ export default function Home() {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      // 1. Faturamento Total (Soma apenas das Vendas Comerciais válidas)
       const { data: salesData, error: salesError } = await supabase
         .from('sales')
         .select('total_price')
@@ -28,7 +27,6 @@ export default function Home() {
       if (salesError) throw salesError;
       const revenue = salesData?.reduce((acc, curr) => acc + Number(curr.total_price), 0) || 0;
 
-      // 2. Custos Totais de Importação
       const { data: importsData, error: importsError } = await supabase
         .from('imports')
         .select('total_cost_brl');
@@ -36,14 +34,13 @@ export default function Home() {
       if (importsError) throw importsError;
       const costs = importsData?.reduce((acc, curr) => acc + Number(curr.total_cost_brl), 0) || 0;
 
-      // 3. Produtos com Estoque Baixo (<= 5 unidades)
       const { data: lowStockData, error: stockError } = await supabase
         .from('products')
         .select('name, stock_quantity, brand:brand_id (name)')
         .is('deleted_at', null)
         .lte('stock_quantity', 5)
         .order('stock_quantity', { ascending: true })
-        .limit(6); // Pega os 6 itens mais críticos
+        .limit(6);
 
       if (stockError) throw stockError;
 
@@ -101,7 +98,6 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Tabela de Alertas de Estoque (Substitui o espaço vazio) */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 lg:col-span-2 overflow-hidden">
               <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center gap-2">
                 <Package className="text-gray-500" size={20} />
@@ -166,7 +162,6 @@ export default function Home() {
   );
 }
 
-// Pequeno componente local para os cards
 function SummaryCard({ title, value, color, icon }: any) {
     const colorStyles: any = {
         blue: 'border-l-4 border-blue-500 text-blue-600 bg-blue-50',
