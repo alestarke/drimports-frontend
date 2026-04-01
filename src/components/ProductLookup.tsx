@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Search, ChevronDown, Package, Check, Plus } from 'lucide-react';
+import { formatBRL } from '../utils/formatters';
+import { filterProducts } from '../utils/searchEngine';
 
 // Ajuste a interface com os campos que sua API retorna
 interface Product {
@@ -43,7 +45,6 @@ export default function ProductLookup({ products, selectedId, onSelect, onAddNew
   }, []);
 
   // Formatador de moeda
-  const formatBRL = (val: string | number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(val));
 
   return (
     <div ref={wrapperRef} className="relative w-full">

@@ -5,6 +5,8 @@ import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import { NumericFormat } from 'react-number-format';
+import { formatBRL } from '../utils/formatters';
+import { filterProducts } from '../utils/searchEngine';
 import { generateSlug } from '../utils/slugifier';
 
 interface Product {
@@ -90,10 +92,6 @@ export default function Products() {
     }
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-  };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     
@@ -123,7 +121,7 @@ export default function Products() {
     setIsModalOpen(false);
     setEditingId(null);
     setFormData({
-      name: '', slug: '', description: '', price: '', stock_quantity: 0, brand_id: 0, category_id: 0 // CORREÇÃO 3
+      name: '', slug: '', description: '', price: '', stock_quantity: 0, brand_id: 0, category_id: 0
     });
   };
 
@@ -179,9 +177,7 @@ export default function Products() {
     }
   };
 
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = filterProducts(products, searchTerm);
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
@@ -236,7 +232,7 @@ export default function Products() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 font-medium text-gray-900">{formatCurrency(product.price)}</td>
+                    <td className="px-6 py-4 font-medium text-gray-900">{formatBRL(product.price)}</td>
                     <td className="px-6 py-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold ${product.stock_quantity === 0 ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
                         {product.stock_quantity} unidades

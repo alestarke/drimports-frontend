@@ -8,6 +8,7 @@ import ProductLookup from '../components/ProductLookup';
 import { NumericFormat } from 'react-number-format';
 import { calculateImportCosts } from '../utils/mathEngine';
 import { generateSlug } from '../utils/slugifier';
+import { formatBRL, formatUSD } from '../utils/formatters';
 
 interface Product {
   id: number;
@@ -331,8 +332,6 @@ export default function Imports() {
   };
 
   // Formatadores
-  const formatBRL = (val: number | string) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(val));
-  const formatUSD = (val: number | string) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(val));
   const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 
   return (

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Search, Trash2, Save, Calendar, Loader2, Filter, Package, Plus } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { NumericFormat } from 'react-number-format';
+import { validateStock } from "../utils/validators";
+import { formatBRL } from "../utils/formatters";
 import Modal from '../components/Modal';
 import ProductLookup from '../components/ProductLookup';
 import toast from 'react-hot-toast';
@@ -99,6 +101,11 @@ export default function Sales() {
     if (formData.product_id === 0) return toast.error("Selecione um produto!");
     if (formData.type !== 'perda' && formData.client_id === 0) return toast.error("Selecione um cliente!");
 
+    const selectedProd = products.find(p => p.id === Number(formData.product_id));
+    if (selectedProd && !validateStock(Number(formData.quantity), selectedProd.stock_quantity)) {
+      return toast.error("Quantidade solicitada excede o estoque disponível ou é inválida.");
+    }
+
     setSaving(true);
     try {
       const isNonRevenue = ['doacao', 'brinde', 'perda'].includes(formData.type);
@@ -180,7 +187,6 @@ export default function Sales() {
     return matchesSearch && matchesType;
   });
 
-  const formatBRL = (val: number | string) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(val));
   const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 
   const typeStyles: any = {

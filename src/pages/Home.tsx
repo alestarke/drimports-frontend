@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Package, TrendingUp, AlertTriangle, Loader2, DollarSign } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { formatBRL } from "../utils/formatters";
 
 export default function Home() {
   const [stats, setStats] = useState({
@@ -58,7 +59,7 @@ export default function Home() {
     }
   };
 
-  const formatBRL = (val: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+  
 
   if (loading) {
     return (
