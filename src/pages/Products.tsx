@@ -5,6 +5,7 @@ import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import { NumericFormat } from 'react-number-format';
+import { generateSlug } from '../utils/slugifier';
 
 interface Product {
   id: number;
@@ -87,10 +88,6 @@ export default function Products() {
     } catch (err) {
       console.error("Erro ao carregar auxiliares", err);
     }
-  };
-
-  const generateSlug = (text: string) => {
-    return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
   };
 
   const formatCurrency = (value: number) => {

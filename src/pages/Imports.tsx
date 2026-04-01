@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 import ProductLookup from '../components/ProductLookup';
 import { NumericFormat } from 'react-number-format';
 import { calculateImportCosts } from '../utils/mathEngine';
+import { generateSlug } from '../utils/slugifier';
 
 interface Product {
   id: number;
@@ -283,10 +284,6 @@ export default function Imports() {
   };
 
   // --- QUICK PRODUCT HANDLERS ---
-  const generateSlug = (text: string) => {
-    return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-  };
-
   const handleQuickProductChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setQuickProduct(prev => {

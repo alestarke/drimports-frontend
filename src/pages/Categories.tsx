@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient';
 import Modal from '../components/Modal';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
+import { generateSlug } from '../utils/slugifier';
 
 interface Category {
   id: number;
@@ -53,15 +54,6 @@ export default function Categories() {
   };
 
   // --- FUNÇÕES AUXILIARES ---
-  const generateSlug = (text: string) => {
-    return text
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/[^\w-]+/g, '');
-  };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => {
