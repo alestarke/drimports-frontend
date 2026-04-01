@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import ProductLookup from '../components/ProductLookup';
 import { NumericFormat } from 'react-number-format';
+import { calculateImportCosts } from '../utils/mathEngine';
 
 interface Product {
   id: number;
@@ -111,15 +112,12 @@ export default function Imports() {
 
   // --- MOTOR MATEMÁTICO ---
   useEffect(() => {
-    const qtd = Number(formData.quantity) || 0;
-    const priceUsd = Number(formData.cost_price_usd) || 0;
-    const rate = Number(formData.exchange_rate) || 0;
-    const fees = Number(formData.extra_fees_brl) || 0;
-
-    const totalUsd = priceUsd * qtd;
-    const baseBrl = totalUsd * rate;
-    const finalTotalBrl = baseBrl + fees;
-    const finalUnitBrl = qtd > 0 ? (finalTotalBrl / qtd) : 0;
+    const { totalUsd, finalTotalBrl, finalUnitBrl } = calculateImportCosts({
+      quantity: formData.quantity,
+      costPriceUsd: formData.cost_price_usd,
+      exchangeRate: formData.exchange_rate,
+      extraFeesBrl: formData.extra_fees_brl
+    });
 
     setCalculated({ totalUsd, finalTotalBrl, finalUnitBrl });
   }, [formData]);
