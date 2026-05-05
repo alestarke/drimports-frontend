@@ -33,9 +33,11 @@ export default function Sales() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // --- ESTADOS DE FILTRO ---
+  // --- ESTADOS DE FILTRO E PAGINAÇÃO ---
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('todos');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itensPerPage = 10;
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -178,7 +180,7 @@ export default function Sales() {
     setFormData({ client_id: 0, product_id: 0, quantity: 1, unit_price: '', sale_date: today, type: 'venda' });
   };
 
-  // --- LÓGICA DE FILTRO ---
+  // --- LÓGICA DE FILTRO E PAGINAÇÃO ---
   const filteredSales = sales.filter(sale => {
     const matchesSearch = 
       (sale.client?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -186,6 +188,15 @@ export default function Sales() {
     const matchesType = typeFilter === 'todos' || sale.type === typeFilter;
     return matchesSearch && matchesType;
   });
+
+  const totalPages = Math.ceil(filteredSales.length / itensPerPage);
+  const startIndex = (currentPage - 1) * itensPerPage;
+  const currentSales = filteredSales.slice(startIndex, startIndex + itensPerPage);
+
+  // Reset page when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, typeFilter]);
 
   const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 
@@ -262,7 +273,7 @@ export default function Sales() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {filteredSales.map((sale) => (
+                  {currentSales.map((sale) => (
                     <tr key={sale.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 text-sm text-gray-600">
                         <div className="flex items-center gap-2">
@@ -296,10 +307,46 @@ export default function Sales() {
                       </td>
                     </tr>
                   ))}
-                  {filteredSales.length === 0 && <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-500 italic">Nenhuma operação encontrada.</td></tr>}
+                  {currentSales.length === 0 && <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-500 italic">Nenhuma operação encontrada.</td></tr>}
                 </tbody>
             </table>
           </div>
+          
+          {/* Paginação */}
+          {totalPages > 1 && (
+            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between bg-gray-50">
+              <span className="text-sm text-gray-700">
+                Mostrando <span className="font-medium">{startIndex + 1}</span> até <span className="font-medium">{Math.min(startIndex + itensPerPage, filteredSales.length)}</span> de <span className="font-medium">{filteredSales.length}</span> resultados
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Anterior
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 rounded text-sm border flex items-center justify-center transition-colors ${currentPage === page ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300 text-gray-600 hover:bg-gray-100'}`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 border border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Próxima
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
