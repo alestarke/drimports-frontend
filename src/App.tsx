@@ -11,6 +11,8 @@ import Clients from './pages/Clients';
 import Sales from './pages/Sales';
 import Users from './pages/Users';
 import Settings from './pages/Settings';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 function App() {
   return (
@@ -21,6 +23,8 @@ function App() {
         
         {/* Rota pública */}
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Rotas Protegidas - Todas envolvidas pelo ProtectedRoute */}
         <Route path="/dashboard" element={
