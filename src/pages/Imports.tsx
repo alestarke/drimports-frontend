@@ -63,6 +63,10 @@ export default function Imports() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   
+  // --- PAGINAÇÃO ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -334,6 +338,11 @@ export default function Imports() {
   // Formatadores
   const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 
+  // --- LÓGICA DE PAGINAÇÃO ---
+  const totalPages = Math.ceil(imports.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const currentImports = imports.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
 
@@ -364,7 +373,7 @@ export default function Imports() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {imports.map((record) => (
+              {currentImports.map((record) => (
                 <tr key={record.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-sm text-gray-600">
                     <div className="flex items-center gap-2"><Calendar size={16} className="text-gray-400" /> {formatDate(record.import_date)}</div>
@@ -385,11 +394,47 @@ export default function Imports() {
                   </td>
                 </tr>
               ))}
-              {imports.length === 0 && (
+              {currentImports.length === 0 && (
                 <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-500 italic">Nenhuma importação registrada.</td></tr>
               )}
             </tbody>
           </table>
+          
+          {/* Paginação */}
+          {totalPages > 1 && (
+            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between bg-gray-50">
+              <span className="text-sm text-gray-700">
+                Mostrando <span className="font-medium">{startIndex + 1}</span> até <span className="font-medium">{Math.min(startIndex + ITEMS_PER_PAGE, imports.length)}</span> de <span className="font-medium">{imports.length}</span> resultados
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Anterior
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 rounded text-sm border flex items-center justify-center transition-colors ${currentPage === page ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300 text-gray-600 hover:bg-gray-100'}`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 border border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Próxima
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
