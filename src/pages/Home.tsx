@@ -8,10 +8,15 @@ export default function Home() {
     totalRevenue: 0,
     totalCosts: 0,
     tripsExpenses: 0,
+    foodExpenses: 0,
+    fuelExpenses: 0,
+    tollExpenses: 0,
+    otherExpenses: 0,
     lowStockCount: 0
   });
   const [lowStockProducts, setLowStockProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showBreakdown, setShowBreakdown] = useState(true);
 
   useEffect(() => {
     fetchDashboardData();
@@ -39,10 +44,14 @@ export default function Home() {
 
       const { data: tripsData, error: tripsError } = await supabase
         .from('trips')
-        .select('expenses_brl')
+        .select('food_expenses_brl, fuel_expenses_brl, toll_expenses_brl, other_expenses_brl')
         .is('deleted_at', null);
       if (tripsError) throw tripsError;
-      const tripsExpenses = tripsData?.reduce((acc, curr) => acc + Number(curr.expenses_brl), 0) || 0;
+      const foodTotal = tripsData?.reduce((acc, curr) => acc + Number(curr.food_expenses_brl || 0), 0) || 0;
+      const fuelTotal = tripsData?.reduce((acc, curr) => acc + Number(curr.fuel_expenses_brl || 0), 0) || 0;
+      const tollTotal = tripsData?.reduce((acc, curr) => acc + Number(curr.toll_expenses_brl || 0), 0) || 0;
+      const otherTotal = tripsData?.reduce((acc, curr) => acc + Number(curr.other_expenses_brl || 0), 0) || 0;
+      const tripsExpenses = foodTotal + fuelTotal + tollTotal + otherTotal;
 
       const { data: lowStockData, error: stockError } = await supabase
         .from('products')
@@ -58,6 +67,10 @@ export default function Home() {
         totalRevenue: revenue,
         totalCosts: costs,
         tripsExpenses: tripsExpenses,
+        foodExpenses: foodTotal,
+        fuelExpenses: fuelTotal,
+        tollExpenses: tollTotal,
+        otherExpenses: otherTotal,
         lowStockCount: lowStockData?.length || 0
       });
       setLowStockProducts(lowStockData || []);
@@ -83,11 +96,10 @@ export default function Home() {
     <div className="p-6 bg-gray-100 min-h-screen">
         <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-800">Painel de Controle</h2>
-            <p className="text-gray-500">Resumo financeiro e operacional da loja.</p>
         </div>
 
         {/* Cards de Resumo */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             <SummaryCard 
               title="Faturamento Bruto" 
               value={formatBRL(stats.totalRevenue)} 
@@ -98,6 +110,12 @@ export default function Home() {
               title="Custo Importações" 
               value={formatBRL(stats.totalCosts)} 
               color="blue" 
+              icon={<DollarSign size={24} />} 
+            />
+            <SummaryCard 
+              title="Despesas de Viagem" 
+              value={formatBRL(stats.tripsExpenses)} 
+              color="red" 
               icon={<DollarSign size={24} />} 
             />
             <SummaryCard 
@@ -162,10 +180,26 @@ export default function Home() {
               </div>
             </div>
             
-            <div className="mt-8 bg-white/10 p-4 rounded-lg border border-white/5">
-              <p className="text-sm text-gray-300">
-                A margem de lucro real depende de outros fatores operacionais (frete local, impostos de venda, taxas de cartão, etc).
-              </p>
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-bold text-white">Despesas por Categoria</h4>
+                <button
+                  onClick={() => setShowBreakdown(prev => !prev)}
+                  className="text-xs px-2 py-1 bg-white/10 rounded text-white hover:bg-white/20"
+                >
+                  {showBreakdown ? 'Ocultar' : 'Mostrar'}
+                </button>
+              </div>
+              {showBreakdown && (
+                <div className="bg-white/5 p-4 rounded-lg border border-white/5">
+                  <div className="text-sm text-gray-200 space-y-1">
+                    <div className="flex justify-between"><span>Alimentação</span><span>{formatBRL(stats.foodExpenses)}</span></div>
+                    <div className="flex justify-between"><span>Combustível</span><span>{formatBRL(stats.fuelExpenses)}</span></div>
+                    <div className="flex justify-between"><span>Pedágio</span><span>{formatBRL(stats.tollExpenses)}</span></div>
+                    <div className="flex justify-between"><span>Outros</span><span>{formatBRL(stats.otherExpenses)}</span></div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
