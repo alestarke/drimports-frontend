@@ -29,10 +29,17 @@ interface Brand {
   name: string; 
 }
 
+interface Trip {
+  id: number;
+  name: string;
+}
+
 interface ImportRecord {
   id: number;
   product?: { name: string; price: number };
+  trip?: { name: string };
   product_id: number;
+  trip_id: number | null;
   quantity: number;
   cost_price_usd: number;
   exchange_rate: number;
@@ -61,6 +68,7 @@ export default function Imports() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
+  const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   
   // --- PAGINAÇÃO ---
@@ -85,6 +93,7 @@ export default function Imports() {
 
   const [formData, setFormData] = useState({
     product_id: 0,
+    trip_id: 0,
     quantity: 1,
     cost_price_usd: '' as number | string,
     exchange_rate: getDefaultDollarRate() as number | string,
@@ -111,7 +120,8 @@ export default function Imports() {
       fetchImports(),
       fetchProducts(),
       fetchCategories(),
-      fetchBrands()
+      fetchBrands(),
+      fetchTrips()
     ]);
     setLoading(false);
   };
@@ -135,7 +145,8 @@ export default function Imports() {
         .from('imports')
         .select(`
           *,
-          product:product_id ( name, price )
+          product:product_id ( name, price ),
+          trip:trip_id ( name )
         `)
         .order('import_date', { ascending: false });
 
@@ -178,6 +189,15 @@ export default function Imports() {
     }
   };
 
+  const fetchTrips = async () => {
+    try {
+      const { data } = await supabase.from('trips').select('id, name').is('deleted_at', null).order('travel_date', { ascending: false });
+      setTrips(data || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   // --- HANDLERS ---
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -188,6 +208,7 @@ export default function Imports() {
     setEditingId(record.id);
     setFormData({
       product_id: record.product_id,
+      trip_id: record.trip_id || 0,
       quantity: record.quantity,
       cost_price_usd: record.cost_price_usd || '',
       exchange_rate: record.exchange_rate || '',
@@ -232,6 +253,7 @@ export default function Imports() {
     try {
       const payload = {
         product_id: Number(formData.product_id),
+        trip_id: Number(formData.trip_id) || null,
         quantity: Number(formData.quantity),
         cost_price_usd: Number(formData.cost_price_usd) || 0,
         exchange_rate: Number(formData.exchange_rate) || 0,
@@ -278,6 +300,7 @@ export default function Imports() {
     setEditingId(null);
     setFormData({
       product_id: 0, 
+      trip_id: 0,
       quantity: 1, 
       cost_price_usd: '', 
       exchange_rate: getDefaultDollarRate(),
@@ -362,7 +385,7 @@ export default function Imports() {
           <table className="w-full text-left border-collapse">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Data</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Data / Viagem</th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Produto / Loja</th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Qtd</th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Custo Total (R$)</th>
@@ -374,6 +397,9 @@ export default function Imports() {
                 <tr key={record.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-sm text-gray-600">
                     <div className="flex items-center gap-2"><Calendar size={16} className="text-gray-400" /> {formatDate(record.import_date)}</div>
+                    {record.trip && (
+                      <p className="text-xs text-blue-600 mt-1 font-medium bg-blue-50 inline-block px-2 py-0.5 rounded">{record.trip.name}</p>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <p className="font-medium text-gray-900">{record.product?.name || 'Produto Excluído/Indisponível'}</p>
@@ -446,7 +472,7 @@ export default function Imports() {
 
           {/* LINHA 1: Informações Básicas */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-            <div className="md:col-span-5">
+            <div className="md:col-span-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Produto Importado</label>
               <ProductLookup
                 products={products}
@@ -465,11 +491,20 @@ export default function Imports() {
                 }}
               />
             </div>
-            <div className="md:col-span-4">
+            <div className="md:col-span-3">
               <label className="block text-sm font-medium text-gray-700 mb-1">Loja / Fornecedor</label>
               <input type="text" name="store_name" value={formData.store_name} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ex: AliExpress, Apple Store..." required />
             </div>
             <div className="md:col-span-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Viagem (Opcional)</label>
+              <select name="trip_id" value={formData.trip_id} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                <option value="0">Sem Viagem</option>
+                {trips.map(trip => (
+                  <option key={trip.id} value={trip.id}>{trip.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Data da Compra</label>
               <input type="date" name="import_date" value={formData.import_date} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" required />
             </div>

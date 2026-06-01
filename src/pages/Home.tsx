@@ -7,6 +7,7 @@ export default function Home() {
   const [stats, setStats] = useState({
     totalRevenue: 0,
     totalCosts: 0,
+    tripsExpenses: 0,
     lowStockCount: 0
   });
   const [lowStockProducts, setLowStockProducts] = useState<any[]>([]);
@@ -30,10 +31,18 @@ export default function Home() {
 
       const { data: importsData, error: importsError } = await supabase
         .from('imports')
-        .select('total_cost_brl');
+        .select('total_cost_brl')
+        .is('deleted_at', null);
 
       if (importsError) throw importsError;
       const costs = importsData?.reduce((acc, curr) => acc + Number(curr.total_cost_brl), 0) || 0;
+
+      const { data: tripsData, error: tripsError } = await supabase
+        .from('trips')
+        .select('expenses_brl')
+        .is('deleted_at', null);
+      if (tripsError) throw tripsError;
+      const tripsExpenses = tripsData?.reduce((acc, curr) => acc + Number(curr.expenses_brl), 0) || 0;
 
       const { data: lowStockData, error: stockError } = await supabase
         .from('products')
@@ -48,6 +57,7 @@ export default function Home() {
       setStats({
         totalRevenue: revenue,
         totalCosts: costs,
+        tripsExpenses: tripsExpenses,
         lowStockCount: lowStockData?.length || 0
       });
       setLowStockProducts(lowStockData || []);
@@ -145,10 +155,10 @@ export default function Home() {
           <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg shadow-lg border border-gray-700 p-6 flex flex-col justify-between">
             <div>
               <h3 className="text-gray-400 text-sm font-medium uppercase tracking-wider mb-1">Lucro Bruto Estimado</h3>
-              <p className="text-xs text-gray-500 mb-6">Faturamento (-) Custos de Importação</p>
+              <p className="text-xs text-gray-500 mb-6">Faturamento (-) Custos de Imp. (-) Despesas de Viagem</p>
               
               <div className="text-4xl font-black text-white">
-                {formatBRL(stats.totalRevenue - stats.totalCosts)}
+                {formatBRL(stats.totalRevenue - stats.totalCosts - stats.tripsExpenses)}
               </div>
             </div>
             

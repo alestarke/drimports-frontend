@@ -7,6 +7,7 @@ import Products from './pages/Products';
 import Brands from './pages/Brands';
 import Categories from './pages/Categories';
 import Imports from './pages/Imports';
+import Trips from './pages/Trips';
 import Clients from './pages/Clients';
 import Sales from './pages/Sales';
 import Users from './pages/Users';
@@ -54,6 +55,12 @@ function App() {
         <Route path="/imports" element={
           <ProtectedRoute>
             <Dashboard><Imports /></Dashboard>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/trips" element={
+          <ProtectedRoute>
+            <Dashboard><Trips /></Dashboard>
           </ProtectedRoute>
         } />
         

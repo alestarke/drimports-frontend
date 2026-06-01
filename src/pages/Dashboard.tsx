@@ -14,7 +14,8 @@ import {
   Boxes,
   Target,
   List,
-  UserRound
+  UserRound,
+  Plane
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -96,6 +97,13 @@ export default function Dashboard({ children }: DashboardProps) {
                 isOpen={isSidebarOpen} 
                 active={location.pathname === '/imports'}
                 onClick={() => handleNavigation('/imports')}
+            />
+            <MenuItem 
+                icon={<Plane size={20} />} 
+                text="Viagens" 
+                isOpen={isSidebarOpen} 
+                active={location.pathname === '/trips'}
+                onClick={() => handleNavigation('/trips')}
             />
             <MenuItem 
                 icon={<Boxes size={20} />} 
