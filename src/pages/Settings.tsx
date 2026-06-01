@@ -138,7 +138,6 @@ export default function Settings() {
     <div className="p-6 bg-gray-100 min-h-screen">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Configurações</h1>
-        <p className="text-gray-500">Gerencie suas preferências, perfil e dados do sistema.</p>
       </div>
 
       <div className="flex flex-col md:flex-row gap-6">

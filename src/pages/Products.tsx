@@ -184,10 +184,7 @@ export default function Products() {
       
       {/* Cabeçalho */}
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Produtos</h1>
-          <p className="text-gray-500">Gerencie seu catálogo de itens</p>
-        </div>
+        <h1 className="text-2xl font-bold text-gray-800">Produtos</h1>
         <button onClick={() => { setEditingId(null); setIsModalOpen(true); }} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-blue-600/20">
           <Plus size={20} /> Novo Produto
         </button>

@@ -216,10 +216,7 @@ export default function Users() {
       
       {/* Cabeçalho */}
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Equipe e Acessos</h1>
-          <p className="text-gray-500">Gerencie quem pode visualizar e alterar dados no sistema.</p>
-        </div>
+        <h1 className="text-2xl font-bold text-gray-800">Equipe e Acessos</h1>
         {currentUser?.is_admin && (
           <button onClick={() => { setEditingId(null); setIsModalOpen(true); }} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-blue-600/20 active:scale-95">
             <Plus size={20} /> Novo Usuário
