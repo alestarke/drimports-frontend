@@ -1,4 +1,4 @@
-import { useState, ReactNode } from 'react';
+import { useEffect, useState, ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { 
@@ -22,10 +22,26 @@ interface DashboardProps {
   children?: ReactNode;
 }
 
+const SIDEBAR_BREAKPOINT = 1024;
+
 export default function Dashboard({ children }: DashboardProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+        if (typeof window === 'undefined') return true;
+        return window.innerWidth >= SIDEBAR_BREAKPOINT;
+    });
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsSidebarOpen(window.innerWidth >= SIDEBAR_BREAKPOINT);
+        };
+
+        handleResize();
+        window.addEventListener('resize', handleResize);
+
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
@@ -38,7 +54,7 @@ export default function Dashboard({ children }: DashboardProps) {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-100 overflow-hidden">
       <Toaster 
          position="bottom-left" 
          containerStyle={{
@@ -51,7 +67,7 @@ export default function Dashboard({ children }: DashboardProps) {
       />
       
       {/* --- SIDEBAR --- */}
-      <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} bg-gray-900 text-white transition-all duration-300 flex flex-col`}>
+    <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} h-full flex-none bg-gray-900 text-white transition-all duration-300 flex flex-col overflow-hidden`}>
         
         {/* Logo Area */}
         <div className="h-16 flex items-center justify-center border-b border-gray-800 overflow-hidden px-2">
@@ -76,7 +92,7 @@ export default function Dashboard({ children }: DashboardProps) {
         </div>
     
         {/* Menu Items */}
-        <nav className="flex-1 py-6 space-y-2 px-3">
+        <nav className="flex-1 min-h-0 py-6 space-y-2 px-3 overflow-y-auto overscroll-contain">
             <MenuItem 
                 icon={<LayoutDashboard size={20} />} 
                 text="Visão Geral" 
@@ -162,7 +178,7 @@ export default function Dashboard({ children }: DashboardProps) {
       </aside>
 
       {/* --- MAIN CONTENT --- */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
         
         {/* Header */}
         <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6 z-10">
@@ -187,7 +203,7 @@ export default function Dashboard({ children }: DashboardProps) {
         </header>
 
         {/* --- CONTEÚDO DA PÁGINA (CHILDREN) --- */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
+        <main className="flex-1 min-w-0 min-h-0 overflow-x-hidden overflow-y-auto bg-gray-100 overscroll-contain">
             {/* Aqui entra o componente da página (Home, Products, etc) */}
             {children}
         </main>
