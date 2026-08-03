@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 import { NumericFormat } from 'react-number-format';
 import { formatBRL } from '../utils/formatters';
-import { filterProducts } from '../utils/searchEngine';
+import { filterProducts, sortProducts } from '../utils/searchEngine';
 import { generateSlug } from '../utils/slugifier';
 
 interface Product {
@@ -178,6 +178,7 @@ export default function Products() {
   };
 
   const filteredProducts = filterProducts(products, searchTerm);
+  const sortedProducts = sortProducts(filteredProducts);
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
@@ -218,7 +219,7 @@ export default function Products() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredProducts.map((product) => (
+                {sortedProducts.map((product) => (
                   <tr key={product.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
@@ -241,7 +242,7 @@ export default function Products() {
                     </td>
                   </tr>
                 ))}
-                {filteredProducts.length === 0 && <tr><td colSpan={4} className="px-6 py-12 text-center text-gray-500 italic">Nenhum produto encontrado.</td></tr>}
+                {sortedProducts.length === 0 && <tr><td colSpan={4} className="px-6 py-12 text-center text-gray-500 italic">Nenhum produto encontrado.</td></tr>}
               </tbody>
             </table>
           </div>

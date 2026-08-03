@@ -13,3 +13,16 @@ export function filterProducts<T extends { name: string }>(productsList: T[], se
     normalizeText(product.name).includes(normalizedSearch)
   );
 }
+
+export function sortProducts<T extends { name: string; stock_quantity?: number }>(productsList: T[]): T[] {
+  return [...productsList].sort((a, b) => {
+    const hasStockA = (a.stock_quantity ?? 0) > 0 ? 1 : 0;
+    const hasStockB = (b.stock_quantity ?? 0) > 0 ? 1 : 0;
+
+    if (hasStockA !== hasStockB) {
+      return hasStockB - hasStockA;
+    }
+
+    return (a.name || '').localeCompare(b.name || '', 'pt-BR', { sensitivity: 'base' });
+  });
+}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterProducts } from './searchEngine';
+import { filterProducts, sortProducts } from './searchEngine';
 
 describe('Filtro de Busca à Prova de Falhas', () => {
   const mockProducts = [
@@ -35,3 +35,26 @@ describe('Filtro de Busca à Prova de Falhas', () => {
     expect(result).toHaveLength(0);
   });
 });
+
+describe('Ordenação de Produtos por Estoque e Ordem Alfabética', () => {
+  it('Deve colocar produtos com estoque > 0 primeiro, ordenados alfabeticamente, e depois os com estoque 0 alfabeticamente', () => {
+    const mockList = [
+      { id: 1, name: 'Zebra Case', stock_quantity: 0 },
+      { id: 2, name: 'iPhone 15 Pro', stock_quantity: 10 },
+      { id: 3, name: 'AirPods Pro', stock_quantity: 5 },
+      { id: 4, name: 'Carregador USB', stock_quantity: 0 },
+      { id: 5, name: 'Bateria Externa', stock_quantity: 2 }
+    ];
+
+    const sorted = sortProducts(mockList);
+
+    expect(sorted.map(p => p.name)).toEqual([
+      'AirPods Pro',
+      'Bateria Externa',
+      'iPhone 15 Pro',
+      'Carregador USB',
+      'Zebra Case'
+    ]);
+  });
+});
+

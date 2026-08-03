@@ -54,7 +54,7 @@ export default function Dashboard({ children }: DashboardProps) {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 overflow-hidden text-slate-800">
       <Toaster 
          position="bottom-left" 
          containerStyle={{
@@ -62,28 +62,28 @@ export default function Dashboard({ children }: DashboardProps) {
             bottom: 20,
         }}
         toastOptions={{
-            style: { background: '#333', color: '#fff' }
+            style: { background: '#0f172a', color: '#fff', border: '1px solid #334155' }
         }}
       />
       
       {/* --- SIDEBAR --- */}
-    <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} h-full flex-none bg-gray-900 text-white transition-all duration-300 flex flex-col overflow-hidden`}>
+    <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} h-full flex-none bg-slate-900 text-slate-100 transition-all duration-300 flex flex-col overflow-hidden border-r border-slate-800 shadow-lg`}>
         
         {/* Logo Area */}
-        <div className="h-16 flex items-center justify-center border-b border-gray-800 overflow-hidden px-2">
+        <div className="h-16 flex items-center justify-center border-b border-slate-800 overflow-hidden px-4">
            {isSidebarOpen ? (
              // Logo aberta (Escrita completa)
              <div className="flex items-center cursor-default select-none">
                 <span className="text-2xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">
                     DR.
                 </span>
-                <span className="text-xl font-medium tracking-[0.15em] text-white ml-2">
+                <span className="text-xl font-bold tracking-[0.15em] text-white ml-2">
                     IMPORTS
                 </span>
              </div>
            ) : (
              // Logo fechada (Ícone/Iniciais)
-             <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 shadow-lg shadow-blue-500/20 cursor-default select-none transition-all transform hover:scale-105">
+             <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 shadow-md shadow-blue-500/20 cursor-default select-none transition-all transform hover:scale-105">
                 <span className="text-white font-black text-lg italic tracking-tighter">
                     DR
                 </span>
@@ -92,7 +92,7 @@ export default function Dashboard({ children }: DashboardProps) {
         </div>
     
         {/* Menu Items */}
-        <nav className="flex-1 min-h-0 py-6 space-y-2 px-3 overflow-y-auto overscroll-contain">
+        <nav className="flex-1 min-h-0 py-6 space-y-1.5 px-3 overflow-y-auto overscroll-contain">
             <MenuItem 
                 icon={<LayoutDashboard size={20} />} 
                 text="Visão Geral" 
@@ -166,10 +166,10 @@ export default function Dashboard({ children }: DashboardProps) {
         </nav>
 
         {/* Footer Sidebar */}
-        <div className="p-4 border-t border-gray-800">
+        <div className="p-4 border-t border-slate-800">
             <button 
                 onClick={handleLogout}
-                className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-red-600/20 text-red-400 hover:text-red-300 transition-colors"
+                className="flex items-center gap-3 w-full p-2.5 rounded-lg hover:bg-rose-500/10 text-rose-400 hover:text-rose-300 transition-colors font-medium text-sm"
             >
                 <LogOut size={20} />
                 <span className={`${!isSidebarOpen && 'hidden'} transition-all duration-300`}>Sair</span>
@@ -181,29 +181,32 @@ export default function Dashboard({ children }: DashboardProps) {
     <div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
         
         {/* Header */}
-        <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6 z-10">
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-10 shadow-xs">
             <div className="flex items-center gap-4">
                 <button 
                     onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                    className="p-2 hover:bg-gray-100 rounded-lg text-gray-600"
+                    className="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors"
+                    title="Alternar Menu"
                 >
                     <Menu size={20} />
                 </button>
             </div>
 
             <div className="flex items-center gap-4">
-                <button className="p-2 hover:bg-gray-100 rounded-full text-gray-600 relative">
+                <button className="p-2 hover:bg-slate-100 rounded-full text-slate-600 relative transition-colors">
                     <Bell size={20} />
-                    <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white"></span>
                 </button>
-                <div className="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                    AS
+                <div className="flex items-center gap-3 pl-2 border-l border-slate-200">
+                    <div className="h-9 w-9 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-sm">
+                        AS
+                    </div>
                 </div>
             </div>
         </header>
 
         {/* --- CONTEÚDO DA PÁGINA (CHILDREN) --- */}
-        <main className="flex-1 min-w-0 min-h-0 overflow-x-hidden overflow-y-auto bg-gray-100 overscroll-contain">
+        <main className="flex-1 min-w-0 min-h-0 overflow-x-hidden overflow-y-auto bg-slate-50 overscroll-contain">
             {/* Aqui entra o componente da página (Home, Products, etc) */}
             {children}
         </main>
