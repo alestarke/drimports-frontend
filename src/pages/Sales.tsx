@@ -1,17 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Search, Trash2, Save, Calendar, Loader2, Filter, Package, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Trash2, Filter, Loader2, Plus, ShoppingBag, Edit } from 'lucide-react';
 import { supabase } from '../supabaseClient';
-import { NumericFormat } from 'react-number-format';
-import { validateStock } from "../utils/validators";
 import { formatBRL } from "../utils/formatters";
-import Modal from '../components/Modal';
-import ProductLookup from '../components/ProductLookup';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 
-interface Client { id: number; name: string; }
-
-interface Product { id: number; name: string; price: number; stock_quantity: number; }
 interface Sale {
   id: number;
   client?: { name: string };
@@ -26,123 +20,35 @@ interface Sale {
 }
 
 export default function Sales() {
+  const navigate = useNavigate();
   const [sales, setSales] = useState<Sale[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
 
-  // --- ESTADOS DE FILTRO E PAGINAÇÃO ---
+  // --- FILTRO E PAGINAÇÃO ---
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('todos');
   const [currentPage, setCurrentPage] = useState(1);
   const itensPerPage = 10;
 
-  const today = new Date().toISOString().split('T')[0];
-
-  const [formData, setFormData] = useState({
-    client_id: 0,
-    product_id: 0,
-    quantity: 1,
-    unit_price: '' as number | string,
-    sale_date: today,
-    type: 'venda' as 'venda' | 'doacao' | 'brinde' | 'perda'
-  });
-
-  const [totalPrice, setTotalPrice] = useState(0);
-
-  // --- BUSCA INICIAL ---
   useEffect(() => { 
-    fetchInitialData(); 
+    fetchSales(); 
   }, []);
 
-  const fetchInitialData = async () => {
-    setLoading(true);
-    await Promise.all([fetchSales(), fetchClients(), fetchProducts()]);
-    setLoading(false);
-  };
-
-  // --- CÁLCULO AO VIVO DO TOTAL ---
-  useEffect(() => {
-    const qtd = Number(formData.quantity) || 0;
-    const price = Number(formData.unit_price) || 0;
-    setTotalPrice(qtd * price);
-  }, [formData.quantity, formData.unit_price]);
-
   const fetchSales = async () => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('sales')
         .select(`*, client:client_id ( name ), product:product_id ( name )`)
         .is('deleted_at', null)
         .order('sale_date', { ascending: false });
+
       if (error) throw error;
       setSales(data || []);
-    } catch (error: any) { toast.error(error.message); }
-  };
-
-  const fetchClients = async () => {
-    const { data } = await supabase.from('clients').select('id, name').is('deleted_at', null).order('name');
-    setClients(data || []);
-  };
-
-  const fetchProducts = async () => {
-    const { data } = await supabase.from('products').select('*').is('deleted_at', null).order('name');
-    setProducts(data || []);
-  };
-
-  // --- HANDLERS ---
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData.product_id === 0) return toast.error("Selecione um produto!");
-    if (formData.type !== 'perda' && formData.client_id === 0) return toast.error("Selecione um cliente!");
-
-    const selectedProd = products.find(p => p.id === Number(formData.product_id));
-    if (selectedProd && !validateStock(Number(formData.quantity), selectedProd.stock_quantity)) {
-      return toast.error("Quantidade solicitada excede o estoque disponível ou é inválida.");
-    }
-
-    setSaving(true);
-    try {
-      const isNonRevenue = ['doacao', 'brinde', 'perda'].includes(formData.type);
-      const payload = {
-        client_id: formData.type === 'perda' ? null : Number(formData.client_id),
-        product_id: Number(formData.product_id),
-        quantity: Number(formData.quantity),
-        unit_price: isNonRevenue ? 0 : Number(formData.unit_price) || 0,
-        total_price: isNonRevenue ? 0 : totalPrice,
-        sale_date: formData.sale_date,
-        type: formData.type
-      };
-
-      // 1. Registra a Operação
-      const { error: saleError } = await supabase.from('sales').insert([payload]);
-      if (saleError) throw saleError;
-
-      // 2. Baixa de Estoque
-      const selectedProd = products.find(p => p.id === payload.product_id);
-      if (selectedProd) {
-        const { error: stockError } = await supabase
-          .from('products')
-          .update({ stock_quantity: selectedProd.stock_quantity - payload.quantity })
-          .eq('id', selectedProd.id);
-        if (stockError) throw stockError;
-      }
-
-      toast.success('Operação registrada com sucesso!');
-      handleCloseModal();
-      fetchSales();
-      fetchProducts();
     } catch (error: any) { 
-      toast.error('Erro ao processar: ' + error.message); 
-    } finally { 
-      setSaving(false); 
+      toast.error('Erro ao buscar vendas: ' + error.message); 
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -169,175 +75,178 @@ export default function Sales() {
         }
         await supabase.from('sales').update({ deleted_at: new Date().toISOString() }).eq('id', id);
         setSales(prev => prev.filter(s => s.id !== id));
-        fetchProducts();
-        toast.success('Cancelada e estoque estornado!');
-      } catch (error: any) { toast.error(error.message); }
+        toast.success('Operação cancelada e estoque estornado!');
+      } catch (error: any) { 
+        toast.error(error.message); 
+      }
     }
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setFormData({ client_id: 0, product_id: 0, quantity: 1, unit_price: '', sale_date: today, type: 'venda' });
-  };
-
-  // --- LÓGICA DE FILTRO E PAGINAÇÃO ---
+  // FILTRAGEM
   const filteredSales = sales.filter(sale => {
     const matchesSearch = 
-      (sale.client?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (sale.product?.name || '').toLowerCase().includes(searchTerm.toLowerCase());
+      sale.product?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      sale.client?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchesType = typeFilter === 'todos' || sale.type === typeFilter;
+
     return matchesSearch && matchesType;
   });
 
+  // PAGINAÇÃO
   const totalPages = Math.ceil(filteredSales.length / itensPerPage);
-  const startIndex = (currentPage - 1) * itensPerPage;
-  const currentSales = filteredSales.slice(startIndex, startIndex + itensPerPage);
+  const paginatedSales = filteredSales.slice(
+    (currentPage - 1) * itensPerPage,
+    currentPage * itensPerPage
+  );
 
-  // Reset page when filter changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, typeFilter]);
-
-  const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
-
-  const typeStyles: any = {
-    venda: 'bg-green-100 text-green-700 border-green-200',
-    doacao: 'bg-orange-100 text-orange-800 border-orange-200',
-    brinde: 'bg-blue-100 text-blue-700 border-blue-200',
-    perda: 'bg-red-100 text-red-700 border-red-200'
-  };
-
-  const typeLabels: any = {
-    venda: 'Venda',
-    doacao: 'Doação',
-    brinde: 'Brinde',
-    perda: 'Perda'
+  const getTypeBadge = (type: string) => {
+    switch (type) {
+      case 'venda': return <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full text-xs font-semibold">🟢 Venda</span>;
+      case 'doacao': return <span className="bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-0.5 rounded-full text-xs font-semibold">🤝 Doação</span>;
+      case 'brinde': return <span className="bg-purple-50 text-purple-700 border border-purple-200 px-2.5 py-0.5 rounded-full text-xs font-semibold">🎁 Brinde</span>;
+      case 'perda': return <span className="bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full text-xs font-semibold">🔴 Perda</span>;
+      default: return null;
+    }
   };
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      
+    <div className="p-6 md:p-8 bg-slate-50 min-h-screen">
+
       {/* Cabeçalho */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Vendas e Saídas</h1>
-        <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg shadow-blue-600/20 transition-all active:scale-95">
-          <Plus size={20} /> Nova Operação
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Vendas & Operações</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Histórico de vendas efetuadas e movimentações de saída</p>
+        </div>
+        <button
+          onClick={() => navigate('/sales/new')}
+          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm transition-all shadow-xs active:scale-95"
+        >
+          <Plus size={18} /> Nova Operação
         </button>
       </div>
 
-      {/* Área de Filtros */}
-      <div className="bg-white p-4 rounded-lg shadow-sm mb-6 flex flex-col md:flex-row gap-4">
+      {/* Busca e Filtros */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-6 flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
-          <input 
-            type="text" 
-            placeholder="Pesquisar cliente ou produto..." 
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
+          <input
+            type="text"
+            placeholder="Buscar por produto ou cliente..."
+            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+
         <div className="flex items-center gap-2">
-          <Filter size={20} className="text-gray-400" />
-          <select 
-            className="border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+          <Filter className="text-slate-400 h-4 w-4" />
+          <select
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
+            onChange={(e) => { setTypeFilter(e.target.value); setCurrentPage(1); }}
+            className="px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white font-medium text-slate-700"
           >
-            <option value="todos">Todos os tipos</option>
-            <option value="venda">Vendas</option>
-            <option value="doacao">Doações</option>
+            <option value="todos">Todos os Tipos</option>
+            <option value="venda">Apenas Vendas</option>
             <option value="brinde">Brindes</option>
-            <option value="perda">Perdas</option>
+            <option value="doacao">Doações</option>
+            <option value="perda">Perdas / Avarias</option>
           </select>
         </div>
       </div>
 
-      {/* Tabela de Resultados */}
+      {/* Tabela */}
       {loading ? (
-        <div className="flex justify-center h-64 items-center"><Loader2 className="animate-spin h-10 w-10 text-blue-600" /></div>
+        <div className="flex flex-col justify-center items-center h-64 gap-3">
+          <Loader2 className="animate-spin h-10 w-10 text-blue-600" />
+          <p className="text-sm text-slate-500">Carregando vendas...</p>
+        </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between min-h-[400px]">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Data</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Cliente / Produto</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Tipo</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase text-right">Total</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase text-right">Ações</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {currentSales.map((sale) => (
-                    <tr key={sale.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <Calendar size={14} className="text-gray-400" />
-                          {formatDate(sale.sale_date)}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="font-medium text-gray-900">
-                          {sale.client?.name || (sale.type === 'perda' ? 'N/A (Perda)' : 'Cliente Genérico')}
-                        </p>
-                        <p className="text-xs text-gray-500">{sale.quantity}x {sale.product?.name}</p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border ${typeStyles[sale.type]}`}>
-                          {typeLabels[sale.type]}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <span className={`font-bold ${sale.total_price > 0 ? 'text-gray-900' : 'text-gray-400'}`}>
-                          {formatBRL(sale.total_price)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
+            <table className="w-full text-left border-collapse text-sm">
+              <thead className="bg-slate-50/70 border-b border-slate-100 text-slate-500 font-semibold text-[11px] uppercase tracking-wider">
+                <tr>
+                  <th className="px-6 py-4">Data</th>
+                  <th className="px-6 py-4">Produto</th>
+                  <th className="px-6 py-4">Cliente</th>
+                  <th className="px-6 py-4">Tipo</th>
+                  <th className="px-6 py-4 text-center">Qtd.</th>
+                  <th className="px-6 py-4 text-right">Total</th>
+                  <th className="px-6 py-4 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {paginatedSales.map((sale) => (
+                  <tr key={sale.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap text-slate-500 font-mono text-xs">
+                      {new Date(sale.sale_date).toLocaleDateString('pt-BR')}
+                    </td>
+                    <td className="px-6 py-4 font-semibold text-slate-800">
+                      {sale.product?.name || 'Produto removido'}
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 text-xs">
+                      {sale.client?.name || <span className="text-slate-400 italic">Sem cliente vinculada</span>}
+                    </td>
+                    <td className="px-6 py-4">
+                      {getTypeBadge(sale.type)}
+                    </td>
+                    <td className="px-6 py-4 text-center font-semibold font-mono text-slate-800">
+                      {sale.quantity} un.
+                    </td>
+                    <td className="px-6 py-4 text-right font-extrabold text-slate-900 font-mono">
+                      {formatBRL(sale.total_price)}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => navigate(`/sales/edit/${sale.id}`)}
+                          className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Editar"
+                        >
+                          <Edit size={18} />
+                        </button>
                         <button
                           onClick={() => handleDelete(sale.id)}
-                          className="text-gray-300 hover:text-red-600 p-1 transition-colors"
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                          title="Cancelar e devolver estoque"
                         >
                           <Trash2 size={18} />
                         </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {currentSales.length === 0 && <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-500 italic">Nenhuma operação encontrada.</td></tr>}
-                </tbody>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {paginatedSales.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center text-slate-500 italic">
+                      Nenhuma operação encontrada.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
             </table>
           </div>
-          
+
           {/* Paginação */}
           {totalPages > 1 && (
-            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between bg-gray-50">
-              <span className="text-sm text-gray-700">
-                Mostrando <span className="font-medium">{startIndex + 1}</span> até <span className="font-medium">{Math.min(startIndex + itensPerPage, filteredSales.length)}</span> de <span className="font-medium">{filteredSales.length}</span> resultados
+            <div className="p-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
+              <span className="text-xs text-slate-500">
+                Página {currentPage} de {totalPages}
               </span>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1 border border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  className="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40"
                 >
                   Anterior
                 </button>
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`w-8 h-8 rounded text-sm border flex items-center justify-center transition-colors ${currentPage === page ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300 text-gray-600 hover:bg-gray-100'}`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                </div>
                 <button
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1 border border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  className="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40"
                 >
                   Próxima
                 </button>
@@ -346,104 +255,6 @@ export default function Sales() {
           )}
         </div>
       )}
-
-      {/* MODAL DE OPERAÇÃO */}
-      <Modal title="Registrar Nova Operação" isOpen={isModalOpen} onClose={handleCloseModal} maxWidth="max-w-4xl">
-        <form onSubmit={handleSave} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Natureza da Operação</label>
-              <select name="type" value={formData.type} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-blue-50 font-medium">
-                <option value="venda">💰 Venda Comercial</option>
-                <option value="brinde">🎁 Brinde / Bonificação</option>
-                <option value="doacao">🤝 Doação / Cortesia</option>
-                <option value="perda">⚠️ Perda (Avaria/Quebra)</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Data</label>
-              <input type="date" name="sale_date" value={formData.sale_date} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" required />
-            </div>
-          </div>
-
-          {formData.type !== 'perda' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
-              <select name="client_id" value={formData.client_id} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500 bg-white" required>
-                <option value="0">Selecione o Cliente...</option>
-                {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Produto</label>
-            <ProductLookup 
-              products={products} 
-              selectedId={formData.product_id} 
-              onSelect={(id) => {
-                const selectedProd = products.find(p => p.id === id);
-                setFormData(prev => ({ 
-                  ...prev, 
-                  product_id: id,
-                  unit_price: formData.type === 'venda' ? selectedProd?.price ?? '' : 0
-                }));
-              }} 
-            />
-            {formData.product_id > 0 && (
-              <p className="mt-1 text-xs text-gray-500 italic">Estoque disponível: {products.find(p => p.id === Number(formData.product_id))?.stock_quantity || 0} unidades</p>
-            )}
-          </div>
-
-          <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 p-6 rounded-xl border shadow-inner transition-colors ${formData.type === 'venda' ? 'bg-gray-50 border-gray-200' : 'bg-orange-50 border-orange-100'}`}>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Quantidade</label>
-              <input type="number" name="quantity" min="1" value={formData.quantity} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 font-bold" required />
-            </div>
-
-            {formData.type === 'venda' ? (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Preço Unitário (R$)</label>
-                  <NumericFormat
-                    name="unit_price"
-                    value={formData.unit_price}
-                    thousandSeparator="."
-                    decimalSeparator=","
-                    prefix="R$ "
-                    decimalScale={2}
-                    allowNegative={false}
-                    onValueChange={(values) => {
-                      setFormData(prev => ({ ...prev, unit_price: values.floatValue ?? '' }));
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500 font-bold"
-                    placeholder="R$ 0,00"
-                    required
-                  />
-                </div>
-                <div className="flex flex-col justify-end">
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Total da Venda</label>
-                  <div className="text-3xl font-black text-green-600">{formatBRL(totalPrice)}</div>
-                </div>
-              </>
-            ) : (
-              <div className="md:col-span-2 flex items-center">
-                <div className="bg-orange-100 text-orange-800 p-3 rounded-lg text-sm font-semibold flex items-center gap-2">
-                  <Package size={20} /> Esta operação registrará apenas a saída de estoque (R$ 0,00).
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-            <button type="button" onClick={handleCloseModal} className="px-5 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors">Cancelar</button>
-            <button type="submit" disabled={saving} className={`px-8 py-2 rounded-lg flex items-center gap-2 font-bold transition-all active:scale-95 shadow-md disabled:opacity-70 ${formData.type === 'venda' ? 'bg-green-600 hover:bg-green-700 text-white shadow-green-600/20' : 'bg-orange-600 hover:bg-orange-700 text-white shadow-orange-600/20'}`}>
-              {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-              {saving ? 'Processando...' : formData.type === 'venda' ? 'Finalizar Venda' : 'Confirmar Saída'}
-            </button>
-          </div>
-        </form>
-      </Modal>
     </div>
   );
 }
