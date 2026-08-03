@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Trash2, Filter, Loader2, Plus, ShoppingBag, Edit } from 'lucide-react';
+import { Search, Trash2, Filter, Loader2, Plus, Edit } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { formatBRL } from "../utils/formatters";
 import toast from 'react-hot-toast';
@@ -28,7 +28,7 @@ export default function Sales() {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('todos');
   const [currentPage, setCurrentPage] = useState(1);
-  const itensPerPage = 10;
+  const itensPerPage = 12;
 
   useEffect(() => { 
     fetchSales(); 
@@ -102,22 +102,22 @@ export default function Sales() {
 
   const getTypeBadge = (type: string) => {
     switch (type) {
-      case 'venda': return <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full text-xs font-semibold">🟢 Venda</span>;
-      case 'doacao': return <span className="bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-0.5 rounded-full text-xs font-semibold">🤝 Doação</span>;
-      case 'brinde': return <span className="bg-purple-50 text-purple-700 border border-purple-200 px-2.5 py-0.5 rounded-full text-xs font-semibold">🎁 Brinde</span>;
-      case 'perda': return <span className="bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full text-xs font-semibold">🔴 Perda</span>;
+      case 'venda': return <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full text-xs font-semibold">🟢 Venda</span>;
+      case 'doacao': return <span className="bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full text-xs font-semibold">🤝 Doação</span>;
+      case 'brinde': return <span className="bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full text-xs font-semibold">🎁 Brinde</span>;
+      case 'perda': return <span className="bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded-full text-xs font-semibold">🔴 Perda</span>;
       default: return null;
     }
   };
 
   return (
-    <div className="p-6 md:p-8 bg-slate-50 min-h-screen">
+    <div className="p-4 sm:p-5 md:p-6 bg-slate-50 h-full flex flex-col justify-between overflow-hidden space-y-3.5">
 
       {/* Cabeçalho */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 flex-none">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Vendas & Operações</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Histórico de vendas efetuadas e movimentações de saída</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Vendas & Operações</h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">Histórico de vendas efetuadas e movimentações de saída</p>
         </div>
         <button
           onClick={() => navigate('/sales/new')}
@@ -128,15 +128,15 @@ export default function Sales() {
       </div>
 
       {/* Busca e Filtros */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-6 flex flex-col md:flex-row gap-4">
+      <div className="bg-white p-3 sm:p-3.5 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row gap-3 flex-none">
         <div className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
           <input
             type="text"
             placeholder="Buscar por produto ou cliente..."
-            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
+            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
           />
         </div>
 
@@ -145,7 +145,7 @@ export default function Sales() {
           <select
             value={typeFilter}
             onChange={(e) => { setTypeFilter(e.target.value); setCurrentPage(1); }}
-            className="px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white font-medium text-slate-700"
+            className="px-3.5 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white font-medium text-slate-700"
           >
             <option value="todos">Todos os Tipos</option>
             <option value="venda">Apenas Vendas</option>
@@ -156,63 +156,63 @@ export default function Sales() {
         </div>
       </div>
 
-      {/* Tabela */}
+      {/* Tabela com Scroll isolado apenas no card */}
       {loading ? (
-        <div className="flex flex-col justify-center items-center h-64 gap-3">
+        <div className="flex flex-col justify-center items-center flex-1 gap-3">
           <Loader2 className="animate-spin h-10 w-10 text-blue-600" />
           <p className="text-sm text-slate-500">Carregando vendas...</p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between min-h-[400px]">
-          <div className="overflow-x-auto">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex-1 flex flex-col min-h-0 justify-between">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             <table className="w-full text-left border-collapse text-sm">
-              <thead className="bg-slate-50/70 border-b border-slate-100 text-slate-500 font-semibold text-[11px] uppercase tracking-wider">
+              <thead className="bg-slate-50/90 backdrop-blur-xs border-b border-slate-100 text-slate-500 font-semibold text-[11px] uppercase tracking-wider sticky top-0 z-10">
                 <tr>
-                  <th className="px-6 py-4">Data</th>
-                  <th className="px-6 py-4">Produto</th>
-                  <th className="px-6 py-4">Cliente</th>
-                  <th className="px-6 py-4">Tipo</th>
-                  <th className="px-6 py-4 text-center">Qtd.</th>
-                  <th className="px-6 py-4 text-right">Total</th>
-                  <th className="px-6 py-4 text-right">Ações</th>
+                  <th className="px-5 py-3">Data</th>
+                  <th className="px-5 py-3">Produto</th>
+                  <th className="px-5 py-3">Cliente</th>
+                  <th className="px-5 py-3">Tipo</th>
+                  <th className="px-5 py-3 text-center">Qtd.</th>
+                  <th className="px-5 py-3 text-right">Total</th>
+                  <th className="px-5 py-3 text-right">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {paginatedSales.map((sale) => (
                   <tr key={sale.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-500 font-mono text-xs">
+                    <td className="px-5 py-2.5 whitespace-nowrap text-slate-500 font-mono text-xs">
                       {new Date(sale.sale_date).toLocaleDateString('pt-BR')}
                     </td>
-                    <td className="px-6 py-4 font-semibold text-slate-800">
+                    <td className="px-5 py-2.5 font-semibold text-slate-800">
                       {sale.product?.name || 'Produto removido'}
                     </td>
-                    <td className="px-6 py-4 text-slate-600 text-xs">
-                      {sale.client?.name || <span className="text-slate-400 italic">Sem cliente vinculada</span>}
+                    <td className="px-5 py-2.5 text-slate-600 text-xs">
+                      {sale.client?.name || <span className="text-slate-400 italic">Sem cliente</span>}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-2.5">
                       {getTypeBadge(sale.type)}
                     </td>
-                    <td className="px-6 py-4 text-center font-semibold font-mono text-slate-800">
+                    <td className="px-5 py-2.5 text-center font-semibold font-mono text-slate-800">
                       {sale.quantity} un.
                     </td>
-                    <td className="px-6 py-4 text-right font-extrabold text-slate-900 font-mono">
+                    <td className="px-5 py-2.5 text-right font-extrabold text-slate-900 font-mono">
                       {formatBRL(sale.total_price)}
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="px-5 py-2.5 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => navigate(`/sales/edit/${sale.id}`)}
                           className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                           title="Editar"
                         >
-                          <Edit size={18} />
+                          <Edit size={16} />
                         </button>
                         <button
                           onClick={() => handleDelete(sale.id)}
                           className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                           title="Cancelar e devolver estoque"
                         >
-                          <Trash2 size={18} />
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </td>
@@ -231,22 +231,22 @@ export default function Sales() {
 
           {/* Paginação */}
           {totalPages > 1 && (
-            <div className="p-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
-              <span className="text-xs text-slate-500">
-                Página {currentPage} de {totalPages}
+            <div className="p-3 px-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between flex-none text-xs text-slate-500">
+              <span>
+                Página {currentPage} de {totalPages} ({filteredSales.length} operações)
               </span>
               <div className="flex gap-2">
                 <button
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  className="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40"
+                  className="px-3 py-1 text-xs font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40"
                 >
                   Anterior
                 </button>
                 <button
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  className="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40"
+                  className="px-3 py-1 text-xs font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40"
                 >
                   Próxima
                 </button>

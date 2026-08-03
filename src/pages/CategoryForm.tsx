@@ -122,7 +122,7 @@ export default function CategoryForm() {
   }
 
   return (
-    <div className="p-6 md:p-8 bg-slate-50 min-h-screen">
+    <div className="p-4 sm:p-5 md:p-6 bg-slate-50 min-h-full space-y-4 md:space-y-5">
       <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-6">
         
         {/* Header Superior com Ações */}

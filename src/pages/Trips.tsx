@@ -24,7 +24,7 @@ export default function Trips() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   
-  // PAGINAÇÃO
+  // PAGINAÇÃO COMPACTA
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
 
@@ -84,13 +84,13 @@ export default function Trips() {
   );
 
   return (
-    <div className="p-6 md:p-8 bg-slate-50 min-h-screen">
+    <div className="p-4 sm:p-5 md:p-6 bg-slate-50 h-full flex flex-col justify-between overflow-hidden space-y-3.5">
       
       {/* Cabeçalho */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 flex-none">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Viagens de Compras</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Controle de viagens logísticas e despesas consolidadas</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Viagens de Compras</h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">Controle de viagens logísticas e despesas consolidadas</p>
         </div>
         <button 
           onClick={() => navigate('/trips/new')}
@@ -101,13 +101,13 @@ export default function Trips() {
       </div>
 
       {/* Busca */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-6 flex gap-4">
+      <div className="bg-white p-3 sm:p-3.5 rounded-2xl border border-slate-200 shadow-xs flex gap-4 flex-none">
         <div className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4" />
           <input 
             type="text" 
             placeholder="Buscar viagem por nome..." 
-            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
+            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
           />
@@ -116,54 +116,54 @@ export default function Trips() {
 
       {/* Tabela */}
       {loading ? (
-        <div className="flex flex-col justify-center items-center h-64 gap-3">
+        <div className="flex flex-col justify-center items-center flex-1 gap-3">
           <Loader2 className="animate-spin h-10 w-10 text-blue-600" />
           <p className="text-sm text-slate-500">Carregando viagens...</p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between min-h-[400px]">
-          <div className="overflow-x-auto">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex-1 flex flex-col min-h-0 justify-between">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             <table className="w-full text-left border-collapse text-sm">
-              <thead className="bg-slate-50/70 border-b border-slate-100 text-slate-500 font-semibold text-[11px] uppercase tracking-wider">
+              <thead className="bg-slate-50/90 backdrop-blur-xs border-b border-slate-100 text-slate-500 font-semibold text-[11px] uppercase tracking-wider sticky top-0 z-10">
                 <tr>
-                  <th className="px-6 py-4">Viagem</th>
-                  <th className="px-6 py-4">Data</th>
-                  <th className="px-6 py-4 text-right">Despesas Totais</th>
-                  <th className="px-6 py-4 text-right">Ações</th>
+                  <th className="px-5 py-3">Viagem</th>
+                  <th className="px-5 py-3">Data</th>
+                  <th className="px-5 py-3 text-right">Despesas Totais</th>
+                  <th className="px-5 py-3 text-right">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {paginatedTrips.map((trip) => (
                   <tr key={trip.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-2.5">
                       <div className="flex items-center gap-3">
-                        <div className="bg-blue-50 p-2.5 rounded-xl text-blue-600 border border-blue-100">
+                        <div className="bg-blue-50 p-2 rounded-xl text-blue-600 border border-blue-100">
                           <Plane size={18} />
                         </div>
                         <span className="font-semibold text-slate-800">{trip.name}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-slate-500 font-mono text-xs">
+                    <td className="px-5 py-2.5 text-slate-500 font-mono text-xs">
                       {new Date(trip.travel_date).toLocaleDateString('pt-BR')}
                     </td>
-                    <td className="px-6 py-4 text-right font-extrabold text-slate-900 font-mono">
+                    <td className="px-5 py-2.5 text-right font-extrabold text-slate-900 font-mono">
                       {formatBRL(trip.expenses_brl || 0)}
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="px-5 py-2.5 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
                         <button 
                           onClick={() => navigate(`/trips/edit/${trip.id}`)}
                           className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                           title="Editar"
                         >
-                          <Edit size={18} />
+                          <Edit size={16} />
                         </button>
                         <button 
                           onClick={() => handleDelete(trip.id)}
                           className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                           title="Excluir"
                         >
-                          <Trash2 size={18} />
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </td>
@@ -182,22 +182,22 @@ export default function Trips() {
 
           {/* Paginação */}
           {totalPages > 1 && (
-            <div className="p-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
-              <span className="text-xs text-slate-500">
-                Página {currentPage} de {totalPages}
+            <div className="p-3 px-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between flex-none text-xs text-slate-500">
+              <span>
+                Página {currentPage} de {totalPages} ({filteredTrips.length} viagens)
               </span>
               <div className="flex gap-2">
                 <button
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  className="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40"
+                  className="px-3 py-1 text-xs font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40"
                 >
                   Anterior
                 </button>
                 <button
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  className="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40"
+                  className="px-3 py-1 text-xs font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40"
                 >
                   Próxima
                 </button>

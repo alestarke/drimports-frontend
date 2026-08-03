@@ -70,7 +70,7 @@ export default function Dashboard({ children }: DashboardProps) {
     <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} h-full flex-none bg-slate-900 text-slate-100 transition-all duration-300 flex flex-col overflow-hidden border-r border-slate-800 shadow-lg`}>
         
         {/* Logo Area */}
-        <div className="h-16 flex items-center justify-center border-b border-slate-800 overflow-hidden px-4">
+        <div className="h-14 flex items-center justify-center border-b border-slate-800 overflow-hidden px-4">
            {isSidebarOpen ? (
              // Logo aberta (Escrita completa)
              <div className="flex items-center cursor-default select-none">
@@ -83,8 +83,8 @@ export default function Dashboard({ children }: DashboardProps) {
              </div>
            ) : (
              // Logo fechada (Ícone/Iniciais)
-             <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 shadow-md shadow-blue-500/20 cursor-default select-none transition-all transform hover:scale-105">
-                <span className="text-white font-black text-lg italic tracking-tighter">
+             <div className="w-9 h-9 flex items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 shadow-md shadow-blue-500/20 cursor-default select-none transition-all transform hover:scale-105">
+                <span className="text-white font-black text-base italic tracking-tighter">
                     DR
                 </span>
              </div>
@@ -92,7 +92,7 @@ export default function Dashboard({ children }: DashboardProps) {
         </div>
     
         {/* Menu Items */}
-        <nav className="flex-1 min-h-0 py-6 space-y-1.5 px-3 overflow-y-auto overscroll-contain">
+        <nav className="flex-1 min-h-0 py-4 space-y-1 px-3 overflow-y-auto overscroll-contain">
             <MenuItem 
                 icon={<LayoutDashboard size={20} />} 
                 text="Visão Geral" 
@@ -166,10 +166,10 @@ export default function Dashboard({ children }: DashboardProps) {
         </nav>
 
         {/* Footer Sidebar */}
-        <div className="p-4 border-t border-slate-800">
+        <div className="p-3 border-t border-slate-800">
             <button 
                 onClick={handleLogout}
-                className="flex items-center gap-3 w-full p-2.5 rounded-lg hover:bg-rose-500/10 text-rose-400 hover:text-rose-300 transition-colors font-medium text-sm"
+                className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-rose-500/10 text-rose-400 hover:text-rose-300 transition-colors font-medium text-sm"
             >
                 <LogOut size={20} />
                 <span className={`${!isSidebarOpen && 'hidden'} transition-all duration-300`}>Sair</span>
@@ -181,11 +181,11 @@ export default function Dashboard({ children }: DashboardProps) {
     <div className="flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
         
         {/* Header */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-10 shadow-xs">
+        <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-10 shadow-xs">
             <div className="flex items-center gap-4">
                 <button 
                     onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                    className="p-2 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors"
+                    className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-600 transition-colors"
                     title="Alternar Menu"
                 >
                     <Menu size={20} />
@@ -193,12 +193,12 @@ export default function Dashboard({ children }: DashboardProps) {
             </div>
 
             <div className="flex items-center gap-4">
-                <button className="p-2 hover:bg-slate-100 rounded-full text-slate-600 relative transition-colors">
+                <button className="p-1.5 hover:bg-slate-100 rounded-full text-slate-600 relative transition-colors">
                     <Bell size={20} />
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white"></span>
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white"></span>
                 </button>
                 <div className="flex items-center gap-3 pl-2 border-l border-slate-200">
-                    <div className="h-9 w-9 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-sm">
+                    <div className="h-8 w-8 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-sm">
                         AS
                     </div>
                 </div>
