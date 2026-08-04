@@ -220,8 +220,7 @@ export default function ImportForm() {
                 <Package size={17} />
               </div>
               <div>
-                <h2 className="text-sm sm:text-base font-bold text-slate-900">Produto & Origem</h2>
-                <p className="text-xs text-slate-500">Selecione o produto, viagem e loja fornecedora</p>
+                <h2 className="text-sm sm:text-base font-bold text-slate-900">Dados do Produto</h2>
               </div>
             </div>
 
@@ -297,8 +296,7 @@ export default function ImportForm() {
                 <Calculator size={17} />
               </div>
               <div>
-                <h2 className="text-sm sm:text-base font-bold text-slate-900">Custo & Cálculo em Reais</h2>
-                <p className="text-xs text-slate-500">Custo em dólar, cotação e taxas alfandegárias</p>
+                <h2 className="text-sm sm:text-base font-bold text-slate-900">Custos & Precificação</h2>
               </div>
             </div>
 

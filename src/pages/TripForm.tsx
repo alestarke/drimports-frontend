@@ -146,8 +146,7 @@ export default function TripForm() {
                 <Plane size={17} />
               </div>
               <div>
-                <h2 className="text-sm sm:text-base font-bold text-slate-900">Identificação da Viagem</h2>
-                <p className="text-xs text-slate-500">Nome identificador e data da viagem</p>
+                <h2 className="text-sm sm:text-base font-bold text-slate-900">Dados da Viagem</h2>
               </div>
             </div>
 
@@ -193,8 +192,7 @@ export default function TripForm() {
                 <DollarSign size={17} />
               </div>
               <div>
-                <h2 className="text-sm sm:text-base font-bold text-slate-900">Despesas por Categoria</h2>
-                <p className="text-xs text-slate-500">Valores gastos durante o deslocamento logístico</p>
+                <h2 className="text-sm sm:text-base font-bold text-slate-900">Despesas e Custos (R$)</h2>
               </div>
             </div>
 

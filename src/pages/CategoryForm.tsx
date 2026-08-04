@@ -160,7 +160,6 @@ export default function CategoryForm() {
               </div>
               <div>
                 <h2 className="text-sm sm:text-base font-bold text-slate-900">Identificação da Categoria</h2>
-                <p className="text-xs text-slate-500">Nome, slug e categoria pai hierárquica</p>
               </div>
             </div>
 

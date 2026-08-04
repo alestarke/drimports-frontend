@@ -169,8 +169,7 @@ export default function UserForm() {
                 <UserIcon size={17} />
               </div>
               <div>
-                <h2 className="text-sm sm:text-base font-bold text-slate-900">Credenciais & Permissões</h2>
-                <p className="text-xs text-slate-500">Dados de autenticação e nível de permissão no ERP</p>
+                <h2 className="text-sm sm:text-base font-bold text-slate-900">Acesso & Permissões</h2>
               </div>
             </div>
 

@@ -176,8 +176,7 @@ export default function ClientForm() {
                 <User size={17} />
               </div>
               <div>
-                <h2 className="text-sm sm:text-base font-bold text-slate-900">Identificação & Contato</h2>
-                <p className="text-xs text-slate-500">Nome completo, e-mail e telefone de contato</p>
+                <h2 className="text-sm sm:text-base font-bold text-slate-900">Dados Pessoais & Contato</h2>
               </div>
             </div>
 
@@ -241,7 +240,6 @@ export default function ClientForm() {
               </div>
               <div>
                 <h2 className="text-sm sm:text-base font-bold text-slate-900">Endereço de Entrega</h2>
-                <p className="text-xs text-slate-500">Busca automática por CEP e dados do logradouro</p>
               </div>
             </div>
 

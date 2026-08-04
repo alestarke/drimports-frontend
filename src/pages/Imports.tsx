@@ -29,7 +29,7 @@ export default function Imports() {
 
   // PAGINAÇÃO COMPACTA
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 10;
+  const ITEMS_PER_PAGE = 11;
 
   useEffect(() => {
     fetchImports();
@@ -150,8 +150,8 @@ export default function Imports() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {paginatedImports.map((imp) => (
-                  <tr key={imp.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="px-5 py-2.5 whitespace-nowrap text-slate-500 font-mono text-xs">
+                  <tr key={imp.id} className="hover:bg-slate-50/60 transition-colors h-[62px]">
+                    <td className="px-5 py-2 whitespace-nowrap text-slate-500 font-mono text-xs">
                       {new Date(imp.import_date).toLocaleDateString('pt-BR')}
                     </td>
                     <td className="px-5 py-2.5">
@@ -201,30 +201,34 @@ export default function Imports() {
             </table>
           </div>
 
-          {/* Paginação */}
-          {totalPages > 1 && (
-            <div className="p-3 px-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between flex-none text-xs text-slate-500">
-              <span>
-                Página {currentPage} de {totalPages} ({filteredImports.length} compras)
-              </span>
-              <div className="flex gap-2">
-                <button
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  className="px-3 py-1 text-xs font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40"
-                >
-                  Anterior
-                </button>
-                <button
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  className="px-3 py-1 text-xs font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40"
-                >
-                  Próxima
-                </button>
-              </div>
-            </div>
-          )}
+          {/* Paginação sempre visível para não quebrar o layout da lista */}
+          <div className="p-3 px-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between flex-none text-xs text-slate-500 min-h-[52px]">
+            {totalPages > 0 ? (
+              <>
+                <span>
+                  Página {currentPage} de {totalPages} ({filteredImports.length} compras)
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    className="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 transition-colors"
+                  >
+                    Anterior
+                  </button>
+                  <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    className="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 transition-colors"
+                  >
+                    Próxima
+                  </button>
+                </div>
+              </>
+            ) : (
+              <span>Nenhum registro encontrado</span>
+            )}
+          </div>
         </div>
       )}
     </div>

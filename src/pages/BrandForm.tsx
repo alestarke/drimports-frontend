@@ -133,7 +133,6 @@ export default function BrandForm() {
               </div>
               <div>
                 <h2 className="text-sm sm:text-base font-bold text-slate-900">Identificação da Marca</h2>
-                <p className="text-xs text-slate-500">Nome comercial e slug amigável da marca</p>
               </div>
             </div>
 

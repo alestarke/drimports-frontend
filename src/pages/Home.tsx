@@ -17,7 +17,9 @@ import {
   ShoppingBag,
   ExternalLink,
   ChevronRight,
-  Boxes
+  Boxes,
+  BarChart3,
+  Users
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { formatBRL } from "../utils/formatters";
@@ -29,7 +31,7 @@ interface StockProduct {
   brand?: { name?: string } | { name?: string }[] | null | any;
 }
 
-const getBrandName = (brand: StockProduct['brand']): string => {
+const getBrandName = (brand: any): string => {
   if (!brand) return 'Sem marca definida';
   if (Array.isArray(brand)) return brand[0]?.name || 'Sem marca definida';
   return brand.name || 'Sem marca definida';
@@ -47,7 +49,11 @@ export default function Home() {
     otherExpenses: 0,
     lowStockCount: 0
   });
+  
   const [lowStockProducts, setLowStockProducts] = useState<StockProduct[]>([]);
+  const [salesByMonth, setSalesByMonth] = useState<{name: string, value: number, color: string, bgClass: string, badgeClass: string}[]>([]);
+  const [topClients, setTopClients] = useState<{name: string, value: number, color: string, bgClass: string, badgeClass: string}[]>([]);
+  const [activeWidget, setActiveWidget] = useState<'expenses' | 'sales' | 'clients'>('expenses');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -59,12 +65,66 @@ export default function Home() {
     try {
       const { data: salesData, error: salesError } = await supabase
         .from('sales')
-        .select('total_price')
+        .select('total_price, sale_date, client:client_id (name)')
         .eq('type', 'venda')
         .is('deleted_at', null);
 
       if (salesError) throw salesError;
-      const revenue = salesData?.reduce((acc, curr) => acc + Number(curr.total_price), 0) || 0;
+
+      let revenue = 0;
+      const clientMap: Record<string, number> = {};
+      const monthGroup: Record<string, number> = {};
+
+      salesData?.forEach(sale => {
+        const val = Number(sale.total_price) || 0;
+        revenue += val;
+
+        const cName = sale.client?.name || 'Cliente Avulso';
+        clientMap[cName] = (clientMap[cName] || 0) + val;
+
+        if (sale.sale_date) {
+          const d = new Date(sale.sale_date);
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+          monthGroup[key] = (monthGroup[key] || 0) + val;
+        }
+      });
+
+      // Top Clients logic
+      const colors = [
+        { color: '#0ea5e9', bgClass: 'bg-sky-500', badgeClass: 'bg-sky-50 text-sky-700 border-sky-200' },
+        { color: '#8b5cf6', bgClass: 'bg-violet-500', badgeClass: 'bg-violet-50 text-violet-700 border-violet-200' },
+        { color: '#10b981', bgClass: 'bg-emerald-500', badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+        { color: '#f59e0b', bgClass: 'bg-amber-500', badgeClass: 'bg-amber-50 text-amber-700 border-amber-200' },
+        { color: '#f43f5e', bgClass: 'bg-rose-500', badgeClass: 'bg-rose-50 text-rose-700 border-rose-200' }
+      ];
+
+      const clientsArr = Object.entries(clientMap)
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 5)
+        .map((client, idx) => ({
+          ...client,
+          ...colors[idx % colors.length]
+        }));
+
+      // Last 6 months logic
+      const monthsArr = Object.entries(monthGroup)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .slice(-6)
+        .map(([key, value], idx) => {
+          const [y, m] = key.split('-');
+          const date = new Date(Number(y), Number(m) - 1);
+          return {
+             name: date.toLocaleString('pt-BR', { month: 'short', year: '2-digit' }).replace('.', ''),
+             value,
+             color: '#3b82f6',
+             bgClass: 'bg-blue-500',
+             badgeClass: 'bg-blue-50 text-blue-700 border-blue-200'
+          };
+        });
+
+      setTopClients(clientsArr);
+      setSalesByMonth(monthsArr);
 
       const { data: importsData, error: importsError } = await supabase
         .from('imports')
@@ -194,8 +254,6 @@ export default function Home() {
 
       {/* KPI CARDS (TOPO) - Enquadramento compacto de 5 colunas */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-        
-        {/* CARD 1: LUCRO BRUTO ESTIMADO (Destaque Principal) */}
         <KpiCard 
           title="Lucro Bruto Estimado"
           subtext="Faturamento (-) Custos (-) Despesas"
@@ -205,8 +263,6 @@ export default function Home() {
           badgeVariant="emerald"
           isHighlighted={true}
         />
-
-        {/* CARD 2: FATURAMENTO BRUTO */}
         <KpiCard 
           title="Faturamento Bruto"
           subtext="Total em vendas efetuadas"
@@ -215,8 +271,6 @@ export default function Home() {
           badgeText="Receita"
           badgeVariant="blue"
         />
-
-        {/* CARD 3: CUSTO IMPORTAÇÕES */}
         <KpiCard 
           title="Custo Importações"
           subtext="Custo total de aquisição"
@@ -225,8 +279,6 @@ export default function Home() {
           badgeText="Estoque"
           badgeVariant="indigo"
         />
-
-        {/* CARD 4: DESPESAS DE VIAGEM */}
         <KpiCard 
           title="Despesas de Viagem"
           subtext="Gastos logísticos totais"
@@ -235,8 +287,6 @@ export default function Home() {
           badgeText="Operacional"
           badgeVariant="amber"
         />
-
-        {/* CARD 5: ESTOQUE CRÍTICO */}
         <KpiCard 
           title="Estoque Crítico"
           subtext="Produtos com <= 5 un. em estoque"
@@ -387,96 +437,196 @@ export default function Home() {
           </div>
         </div>
 
-        {/* COLUNA DIREITA: DESPESAS POR CATEGORIA (5/12 Colunas) */}
+        {/* COLUNA DIREITA: WIDGETS DINÂMICOS (5/12 Colunas) */}
         <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-4 md:p-5 flex flex-col justify-between space-y-4">
           <div>
-            {/* Header do Painel */}
-            <div className="flex items-start justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2.5">
-                <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100">
-                  <PieChartIcon size={17} />
-                </div>
-                <div>
-                  <h2 className="font-bold text-slate-900 text-sm">Despesas por Categoria</h2>
-                  <p className="text-[11px] text-slate-500">Distribuição visual dos custos de viagem</p>
+            {/* Header do Painel com Selector */}
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between pb-3 border-b border-slate-100 gap-3">
+              <div className="flex flex-col gap-1">
+                <h2 className="font-bold text-slate-900 text-sm">Painéis Gráficos</h2>
+                <div className="flex gap-1.5 bg-slate-100 p-1 rounded-lg w-max shadow-inner border border-slate-200/50">
+                  <button 
+                    onClick={() => setActiveWidget('expenses')}
+                    className={`px-3 py-1.5 text-[10px] font-semibold rounded-md transition-all flex items-center gap-1.5 ${activeWidget === 'expenses' ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/50' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    <PieChartIcon size={12} /> Gastos
+                  </button>
+                  <button 
+                    onClick={() => setActiveWidget('sales')}
+                    className={`px-3 py-1.5 text-[10px] font-semibold rounded-md transition-all flex items-center gap-1.5 ${activeWidget === 'sales' ? 'bg-white text-blue-700 shadow-xs border border-slate-200/50' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    <BarChart3 size={12} /> Vendas
+                  </button>
+                  <button 
+                    onClick={() => setActiveWidget('clients')}
+                    className={`px-3 py-1.5 text-[10px] font-semibold rounded-md transition-all flex items-center gap-1.5 ${activeWidget === 'clients' ? 'bg-white text-emerald-700 shadow-xs border border-slate-200/50' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    <Users size={12} /> Clientes
+                  </button>
                 </div>
               </div>
-
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 font-mono">
-                {formatBRL(stats.tripsExpenses)}
-              </span>
             </div>
 
-            {/* Conteúdo Visual (Gráfico Donut + Progresso por Categoria) */}
-            {stats.tripsExpenses > 0 && activeCategories.length > 0 ? (
-              <div className="mt-3 space-y-3">
-                
-                {/* Visual Donut Chart SVG Component */}
-                <div className="flex items-center justify-center py-1">
-                  <DonutChart 
-                    categories={activeCategories} 
-                    total={stats.tripsExpenses} 
-                  />
-                </div>
-
-                {/* Lista de Barras de Progresso por Categoria */}
-                <div className="space-y-2.5 pt-1">
-                  {activeCategories.map((cat, idx) => {
-                    const percentage = Math.round((cat.value / stats.tripsExpenses) * 100);
-                    const Icon = cat.icon;
-                    return (
-                      <div key={idx} className="space-y-1">
-                        <div className="flex items-center justify-between text-[11px]">
-                          <div className="flex items-center gap-1.5 font-medium text-slate-700">
-                            <span className={`p-0.5 rounded ${cat.badgeClass} border`}>
-                              <Icon size={12} />
-                            </span>
-                            <span>{cat.name}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-slate-400 font-mono text-[10px]">{percentage}%</span>
-                            <span className="font-semibold text-slate-900 font-mono">{formatBRL(cat.value)}</span>
-                          </div>
-                        </div>
-
-                        {/* Barra de Progresso Horizontal Estilizada */}
-                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden p-0.5 border border-slate-100">
-                          <div 
-                            className={`h-full rounded-full ${cat.bgClass} transition-all duration-500 ease-out`}
-                            style={{ width: `${percentage}%` }}
-                          />
-                        </div>
+            {/* CONTEÚDO DINÂMICO */}
+            <div className="mt-4">
+              
+              {/* WIDGET: DESPESAS (ANTIGO) */}
+              {activeWidget === 'expenses' && (
+                <>
+                  {stats.tripsExpenses > 0 && activeCategories.length > 0 ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-center py-1">
+                        <DonutChart categories={activeCategories} total={stats.tripsExpenses} title="Despesas" />
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : (
-              <div className="py-10 text-center flex flex-col items-center justify-center">
-                <div className="p-3 rounded-full bg-slate-100 text-slate-400 mb-2 border border-slate-200/60">
-                  <PieChartIcon size={28} />
-                </div>
-                <h3 className="font-semibold text-slate-800 text-xs">Sem Despesas de Viagem</h3>
-                <p className="text-slate-500 text-[11px] mt-0.5 max-w-xs">
-                  Nenhuma despesa registrada até o momento.
-                </p>
-              </div>
-            )}
-          </div>
+                      <div className="space-y-2.5 pt-1">
+                        {activeCategories.map((cat, idx) => {
+                          const percentage = Math.round((cat.value / stats.tripsExpenses) * 100);
+                          const Icon = cat.icon;
+                          return (
+                            <div key={idx} className="space-y-1">
+                              <div className="flex items-center justify-between text-[11px]">
+                                <div className="flex items-center gap-1.5 font-medium text-slate-700">
+                                  <span className={`p-0.5 rounded ${cat.badgeClass} border`}>
+                                    <Icon size={12} />
+                                  </span>
+                                  <span>{cat.name}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-slate-400 font-mono text-[10px]">{percentage}%</span>
+                                  <span className="font-semibold text-slate-900 font-mono">{formatBRL(cat.value)}</span>
+                                </div>
+                              </div>
+                              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden p-0.5 border border-slate-100">
+                                <div 
+                                  className={`h-full rounded-full ${cat.bgClass} transition-all duration-500 ease-out`}
+                                  style={{ width: `${percentage}%` }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <EmptyWidgetState icon={PieChartIcon} title="Sem Despesas de Viagem" subtitle="Nenhuma despesa registrada até o momento." />
+                  )}
+                </>
+              )}
 
-          {/* Footer do Card de Despesas */}
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-            <span className="text-[11px] text-slate-500">Categorias zeradas omitidas</span>
+              {/* WIDGET: VENDAS POR MÊS */}
+              {activeWidget === 'sales' && (
+                <>
+                  {salesByMonth.length > 0 ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-center py-1">
+                        <DonutChart categories={salesByMonth} total={salesByMonth.reduce((acc, curr) => acc + curr.value, 0)} title="Semestre" />
+                      </div>
+                      <div className="space-y-2.5 pt-1">
+                        {salesByMonth.map((cat, idx) => {
+                          const max = Math.max(...salesByMonth.map(m => m.value));
+                          const percentage = max > 0 ? Math.round((cat.value / max) * 100) : 0;
+                          return (
+                            <div key={idx} className="space-y-1">
+                              <div className="flex items-center justify-between text-[11px]">
+                                <div className="flex items-center gap-1.5 font-medium text-slate-700">
+                                  <span className={`px-1.5 py-0.5 rounded font-mono font-bold capitalize ${cat.badgeClass} border`}>
+                                    {cat.name}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-semibold text-slate-900 font-mono">{formatBRL(cat.value)}</span>
+                                </div>
+                              </div>
+                              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden p-0.5 border border-slate-100">
+                                <div 
+                                  className={`h-full rounded-full ${cat.bgClass} transition-all duration-500 ease-out`}
+                                  style={{ width: `${percentage}%` }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <EmptyWidgetState icon={BarChart3} title="Sem Vendas" subtitle="Nenhuma venda registrada nos últimos meses." />
+                  )}
+                </>
+              )}
+
+              {/* WIDGET: TOP CLIENTES */}
+              {activeWidget === 'clients' && (
+                <>
+                  {topClients.length > 0 ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-center py-1">
+                        <DonutChart categories={topClients} total={topClients.reduce((acc, curr) => acc + curr.value, 0)} title="Receita Clientes" />
+                      </div>
+                      <div className="space-y-2.5 pt-1">
+                        {topClients.map((cat, idx) => {
+                          const max = Math.max(...topClients.map(c => c.value));
+                          const percentage = max > 0 ? Math.round((cat.value / max) * 100) : 0;
+                          return (
+                            <div key={idx} className="space-y-1">
+                              <div className="flex items-center justify-between text-[11px]">
+                                <div className="flex items-center gap-1.5 font-medium text-slate-700">
+                                  <span className={`p-0.5 rounded ${cat.badgeClass} border`}>
+                                    <Users size={12} />
+                                  </span>
+                                  <span className="truncate max-w-[120px]">{cat.name}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-semibold text-slate-900 font-mono">{formatBRL(cat.value)}</span>
+                                </div>
+                              </div>
+                              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden p-0.5 border border-slate-100">
+                                <div 
+                                  className={`h-full rounded-full ${cat.bgClass} transition-all duration-500 ease-out`}
+                                  style={{ width: `${percentage}%` }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <EmptyWidgetState icon={Users} title="Sem Clientes" subtitle="Nenhum cliente com vendas associadas." />
+                  )}
+                </>
+              )}
+
+            </div>
+          </div>
+          
+          {/* Footer do Widget Dinâmico */}
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs mt-4">
+            <span className="text-[11px] text-slate-500">Exibição analítica</span>
             <button
-              onClick={() => navigate('/trips')}
-              className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:underline flex items-center gap-1"
+              onClick={() => navigate('/sales')}
+              className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1"
             >
-              Ver Viagens <ArrowRight size={12} />
+              Ver Relatórios <ArrowRight size={12} />
             </button>
           </div>
         </div>
 
       </div>
+    </div>
+  );
+}
+
+// ==========================================
+// SUBCOMPONENTE: EMPTY STATE
+// ==========================================
+function EmptyWidgetState({ icon: Icon, title, subtitle }: { icon: any, title: string, subtitle: string }) {
+  return (
+    <div className="py-10 text-center flex flex-col items-center justify-center">
+      <div className="p-3 rounded-full bg-slate-100 text-slate-400 mb-2 border border-slate-200/60">
+        <Icon size={28} />
+      </div>
+      <h3 className="font-semibold text-slate-800 text-xs">{title}</h3>
+      <p className="text-slate-500 text-[11px] mt-0.5 max-w-xs">{subtitle}</p>
     </div>
   );
 }
@@ -531,7 +681,6 @@ function KpiCard({
           : 'bg-white border border-slate-200 shadow-xs hover:border-slate-300'
       }`}
     >
-      {/* Top Header inside Card */}
       <div className="flex items-start justify-between gap-1.5">
         <div className="space-y-0.5">
           <span className={`text-[10px] font-bold uppercase tracking-wider block ${
@@ -549,7 +698,6 @@ function KpiCard({
         </div>
       </div>
 
-      {/* Main Numeric Value */}
       <div className="mt-2.5">
         <div className="text-lg xl:text-xl font-extrabold text-slate-900 tracking-tight font-mono truncate">
           {value}
@@ -573,28 +721,26 @@ interface CategoryItem {
   bgClass: string;
 }
 
-function DonutChart({ categories, total }: { categories: CategoryItem[]; total: number }) {
-  const radius = 35;
-  const circumference = 2 * Math.PI * radius; // ≈ 219.91
+function DonutChart({ categories, total, title }: { categories: CategoryItem[]; total: number, title?: string }) {
+  const radius = 42;
+  const circumference = 2 * Math.PI * radius; 
 
   let accumulatedPercent = 0;
 
   return (
     <div className="relative flex items-center justify-center">
-      <svg width="128" height="128" viewBox="0 0 100 100" className="transform -rotate-90">
-        {/* Circle background ring */}
+      <svg width="144" height="144" viewBox="0 0 100 100" className="transform -rotate-90">
         <circle
           cx="50"
           cy="50"
           r={radius}
           fill="transparent"
           stroke="#f1f5f9"
-          strokeWidth="11"
+          strokeWidth="9"
         />
 
-        {/* Dynamic Category Slices */}
         {categories.map((cat, idx) => {
-          const percent = cat.value / total;
+          const percent = total > 0 ? (cat.value / total) : 0;
           const strokeDasharray = `${percent * circumference} ${circumference}`;
           const strokeDashoffset = -(accumulatedPercent * circumference);
           accumulatedPercent += percent;
@@ -607,7 +753,7 @@ function DonutChart({ categories, total }: { categories: CategoryItem[]; total: 
               r={radius}
               fill="transparent"
               stroke={cat.color}
-              strokeWidth="11"
+              strokeWidth="9"
               strokeDasharray={strokeDasharray}
               strokeDashoffset={strokeDashoffset}
               className="transition-all duration-700 ease-in-out hover:opacity-85"
@@ -616,10 +762,9 @@ function DonutChart({ categories, total }: { categories: CategoryItem[]; total: 
         })}
       </svg>
 
-      {/* Legend inside Donut Ring */}
-      <div className="absolute flex flex-col items-center justify-center text-center">
-        <span className="text-[9px] font-semibold uppercase tracking-wider text-slate-400">Total</span>
-        <span className="text-xs font-extrabold text-slate-900 font-mono">
+      <div className="absolute flex flex-col items-center justify-center text-center px-1">
+        <span className="text-[9px] font-semibold uppercase tracking-wider text-slate-400">{title || 'Total'}</span>
+        <span className="text-xs font-extrabold text-slate-900 font-mono tracking-tighter">
           {formatBRL(total)}
         </span>
       </div>

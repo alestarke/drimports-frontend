@@ -222,8 +222,7 @@ export default function SaleForm() {
                 <ShoppingBag size={17} />
               </div>
               <div>
-                <h2 className="text-sm sm:text-base font-bold text-slate-900">Tipo & Data da Operação</h2>
-                <p className="text-xs text-slate-500">Defina a modalidade comercial e a data de emissão</p>
+                <h2 className="text-sm sm:text-base font-bold text-slate-900">Tipo & Data</h2>
               </div>
             </div>
 
@@ -272,7 +271,6 @@ export default function SaleForm() {
               </div>
               <div>
                 <h2 className="text-sm sm:text-base font-bold text-slate-900">Cliente & Produto</h2>
-                <p className="text-xs text-slate-500">Selecione o destinatário e o item movimentado</p>
               </div>
             </div>
 
@@ -329,8 +327,7 @@ export default function SaleForm() {
                 <DollarSign size={17} />
               </div>
               <div>
-                <h2 className="text-sm sm:text-base font-bold text-slate-900">Valores & Quantidade</h2>
-                <p className="text-xs text-slate-500">Definição de preço unitário e total final da operação</p>
+                <h2 className="text-sm sm:text-base font-bold text-slate-900">Valores</h2>
               </div>
             </div>
 

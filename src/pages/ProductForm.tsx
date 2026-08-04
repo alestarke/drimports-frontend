@@ -188,7 +188,6 @@ export default function ProductForm() {
               </div>
               <div>
                 <h2 className="text-sm sm:text-base font-bold text-slate-900">Identificação do Produto</h2>
-                <p className="text-xs text-slate-500">Nome, marca e classificação comercial</p>
               </div>
             </div>
 
@@ -266,7 +265,6 @@ export default function ProductForm() {
               </div>
               <div>
                 <h2 className="text-sm sm:text-base font-bold text-slate-900">Preço & Estoque</h2>
-                <p className="text-xs text-slate-500">Valor de venda pública e quantidade em estoque</p>
               </div>
             </div>
 

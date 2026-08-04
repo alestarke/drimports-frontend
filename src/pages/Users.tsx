@@ -23,7 +23,7 @@ export default function Users() {
 
   // PAGINAÇÃO COMPACTA
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 10;
+  const ITEMS_PER_PAGE = 11;
 
   useEffect(() => {
     fetchInitialData();
@@ -163,8 +163,8 @@ export default function Users() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {paginatedUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="px-5 py-2.5">
+                  <tr key={user.id} className="hover:bg-slate-50/60 transition-colors h-[62px]">
+                    <td className="px-5 py-2">
                       <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-xl border ${
                           user.is_admin 
@@ -233,30 +233,34 @@ export default function Users() {
             </table>
           </div>
 
-          {/* Paginação */}
-          {totalPages > 1 && (
-            <div className="p-3 px-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between flex-none text-xs text-slate-500">
-              <span>
-                Página {currentPage} de {totalPages} ({filteredUsers.length} usuários)
-              </span>
-              <div className="flex gap-2">
-                <button
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  className="px-3 py-1 text-xs font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40"
-                >
-                  Anterior
-                </button>
-                <button
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  className="px-3 py-1 text-xs font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40"
-                >
-                  Próxima
-                </button>
-              </div>
-            </div>
-          )}
+          {/* Paginação sempre visível para não quebrar o layout da lista */}
+          <div className="p-3 px-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between flex-none text-xs text-slate-500 min-h-[52px]">
+            {totalPages > 0 ? (
+              <>
+                <span>
+                  Página {currentPage} de {totalPages} ({filteredUsers.length} usuários)
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    className="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 transition-colors"
+                  >
+                    Anterior
+                  </button>
+                  <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    className="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 transition-colors"
+                  >
+                    Próxima
+                  </button>
+                </div>
+              </>
+            ) : (
+              <span>Nenhum registro encontrado</span>
+            )}
+          </div>
         </div>
       )}
     </div>
