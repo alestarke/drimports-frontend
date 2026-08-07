@@ -13,7 +13,8 @@ import {
   Boxes,
   Plane,
   Settings,
-  Bell
+  Bell,
+  ArrowLeftRight
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import toast, { Toaster } from 'react-hot-toast';
@@ -68,11 +69,11 @@ export default function Dashboard({ children }: { children: React.ReactNode }) {
         }}
       />
       
-      {/* --- SIDEBAR (TEMA ESCURO ORIGINAL) --- */}
-      <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} h-full flex-none bg-slate-900 text-slate-100 transition-all duration-300 flex flex-col overflow-hidden border-r border-slate-800 shadow-lg z-20`}>
+      {/* --- SIDEBAR (TEMA ESCURO SLATE-950) --- */}
+      <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} h-full flex-none bg-slate-950 text-slate-100 transition-all duration-300 flex flex-col overflow-hidden border-r border-slate-800/80 shadow-lg z-20`}>
         
         {/* Logo Area */}
-        <div className="h-14 flex items-center justify-center border-b border-slate-800 overflow-hidden px-4 bg-slate-900">
+        <div className="h-14 flex items-center justify-center border-b border-slate-800/80 overflow-hidden px-4 bg-slate-950">
            {isSidebarOpen ? (
              // Logo aberta (Escrita completa)
              <div className="flex items-center cursor-pointer select-none" onClick={() => handleNavigation('/dashboard')}>
@@ -94,6 +95,20 @@ export default function Dashboard({ children }: { children: React.ReactNode }) {
                 </span>
              </div>
            )}
+        </div>
+
+        {/* --- APP SWITCHER BUTTON (TROCAR DE MÓDULO P/ FINANCEIRO) --- */}
+        <div className="p-3 border-b border-slate-800/80 bg-slate-950">
+          <button 
+            onClick={() => handleNavigation('/financeiro/dashboard')}
+            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-700/40 transition-all shadow-xs group ${!isSidebarOpen && 'justify-center px-0'}`}
+            title="Alternar para Controle Financeiro"
+          >
+            <ArrowLeftRight size={16} className="text-emerald-400 group-hover:rotate-180 transition-transform duration-300" />
+            {isSidebarOpen && (
+              <span className="truncate">Alternar p/ 💳 <b>Financial Hub</b></span>
+            )}
+          </button>
         </div>
     
         {/* Menu Items */}
@@ -171,7 +186,7 @@ export default function Dashboard({ children }: { children: React.ReactNode }) {
         </nav>
 
         {/* Footer Sidebar */}
-        <div className="p-3 border-t border-slate-800 bg-slate-900">
+        <div className="p-3 border-t border-slate-800/80 bg-slate-950">
             <button 
                 onClick={handleLogout}
                 className="flex items-center gap-3 w-full p-2.5 rounded-xl hover:bg-rose-500/10 text-rose-400 hover:text-rose-300 transition-colors font-medium text-sm group"

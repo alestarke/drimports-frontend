@@ -23,6 +23,13 @@ import Settings from './pages/Settings';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 
+// Módulo Financeiro
+import FinancialLayout from './components/FinancialLayout';
+import FinancialDashboard from './pages/financial/FinancialDashboard';
+import FinancialAccounts from './pages/financial/FinancialAccounts';
+import FinancialModalities from './pages/financial/FinancialModalities';
+import FinancialTransactions from './pages/financial/FinancialTransactions';
+
 function App() {
   return (
     <BrowserRouter>
@@ -35,7 +42,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* Rotas Protegidas - Visão Geral / Dashboard */}
+        {/* Rotas Protegidas - Visão Geral / Dashboard ERP */}
         <Route path="/dashboard" element={
           <ProtectedRoute>
             <Dashboard><Home /></Dashboard>
@@ -182,6 +189,34 @@ function App() {
         <Route path="/settings" element={
           <ProtectedRoute>
             <Dashboard><Settings /></Dashboard>
+          </ProtectedRoute>
+        } />
+
+        {/* MÓDULO FINANCEIRO & GASTOS PESSOAIS (FINANCIAL HUB) */}
+        <Route path="/financeiro" element={<Navigate to="/financeiro/dashboard" replace />} />
+        <Route path="/financeiro/dashboard" element={
+          <ProtectedRoute>
+            <FinancialLayout><FinancialDashboard /></FinancialLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/financeiro/contas" element={
+          <ProtectedRoute>
+            <FinancialLayout><FinancialAccounts /></FinancialLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/financeiro/modalidades" element={
+          <ProtectedRoute>
+            <FinancialLayout><FinancialModalities /></FinancialLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/financeiro/transacoes" element={
+          <ProtectedRoute>
+            <FinancialLayout><FinancialTransactions /></FinancialLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/financeiro/relatorios" element={
+          <ProtectedRoute>
+            <FinancialLayout><FinancialDashboard /></FinancialLayout>
           </ProtectedRoute>
         } />
 
