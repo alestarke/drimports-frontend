@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Trash2, Filter, Loader2, Plus, Edit } from 'lucide-react';
+import { Search, Trash2, Filter, Loader2, Plus, Edit, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../supabaseClient';
-import { formatBRL } from "../utils/formatters";
+import { formatBRL, formatDateOnly } from "../utils/formatters";
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 
@@ -28,7 +28,7 @@ export default function Sales() {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('todos');
   const [currentPage, setCurrentPage] = useState(1);
-  const itensPerPage = 11;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => { 
     fetchSales(); 
@@ -94,11 +94,11 @@ export default function Sales() {
   });
 
   // PAGINAÇÃO
-  const totalPages = Math.ceil(filteredSales.length / itensPerPage);
-  const paginatedSales = filteredSales.slice(
-    (currentPage - 1) * itensPerPage,
-    currentPage * itensPerPage
-  );
+  const totalItems = filteredSales.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+  const paginatedSales = filteredSales.slice(startIndex, endIndex);
 
   const getTypeBadge = (type: string) => {
     switch (type) {
@@ -116,7 +116,7 @@ export default function Sales() {
       {/* Cabeçalho */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 flex-none">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Vendas & Operações</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Vendas</h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">Histórico de vendas efetuadas e movimentações de saída</p>
         </div>
         <button
@@ -181,7 +181,7 @@ export default function Sales() {
                 {paginatedSales.map((sale) => (
                   <tr key={sale.id} className="hover:bg-slate-50/60 transition-colors h-[62px]">
                     <td className="px-5 py-2 whitespace-nowrap text-slate-500 font-mono text-xs">
-                      {new Date(sale.sale_date).toLocaleDateString('pt-BR')}
+                      {formatDateOnly(sale.sale_date)}
                     </td>
                     <td className="px-5 py-2.5 font-semibold text-slate-800">
                       {sale.product?.name || 'Produto removido'}
@@ -229,34 +229,72 @@ export default function Sales() {
             </table>
           </div>
 
-          {/* Paginação sempre visível para não quebrar o layout da lista */}
-          <div className="p-3 px-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between flex-none text-xs text-slate-500 min-h-[52px]">
-            {totalPages > 0 ? (
-              <>
-                <span>
-                  Página {currentPage} de {totalPages} ({filteredSales.length} operações)
+          {/* Rodapé de Paginação */}
+          {filteredSales.length > 0 && (
+            <div className="bg-slate-50/90 border-t border-slate-200 px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-slate-600 flex-none">
+              <div className="flex items-center gap-2">
+                <span>Exibir</span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+                <span>registros por página</span>
+                <span className="text-slate-400 font-normal ml-2 hidden md:inline">
+                  (Mostrando {totalItems > 0 ? startIndex + 1 : 0} a {endIndex} de {totalItems})
                 </span>
-                <div className="flex gap-2">
-                  <button
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    className="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 transition-colors"
-                  >
-                    Anterior
-                  </button>
-                  <button
-                    disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    className="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-40 transition-colors"
-                  >
-                    Próxima
-                  </button>
-                </div>
-              </>
-            ) : (
-              <span>Nenhum registro encontrado</span>
-            )}
-          </div>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  title="Página Anterior"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(page => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+                  .map((page, idx, arr) => {
+                    const showEllipsis = idx > 0 && page - arr[idx - 1] > 1;
+                    return (
+                      <div key={page} className="flex items-center">
+                        {showEllipsis && <span className="px-1 text-slate-400 font-bold">...</span>}
+                        <button
+                          onClick={() => setCurrentPage(page)}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                            currentPage === page
+                              ? 'bg-blue-600 text-white shadow-xs'
+                              : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      </div>
+                    );
+                  })}
+
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  title="Próxima Página"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

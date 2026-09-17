@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Receipt, 
   Plus, 
@@ -17,7 +18,10 @@ import {
   Tag, 
   RefreshCw,
   Eye,
-  X
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Printer
 } from 'lucide-react';
 import { 
   financialService, 
@@ -29,6 +33,7 @@ import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
 
 export default function FinancialTransactions() {
+  const navigate = useNavigate();
   const [transactions, setTransactions] = useState<FinancialTransaction[]>([]);
   const [accounts, setAccounts] = useState<FinancialAccount[]>([]);
   const [modalities, setModalities] = useState<FinancialModality[]>([]);
@@ -202,6 +207,15 @@ export default function FinancialTransactions() {
     }
   };
 
+  // Paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Resetar para a primeira página ao mudar filtros
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterType, filterStatus, filterAccount]);
+
   // Filtragem
   const filteredTransactions = transactions.filter(tx => {
     const matchesSearch = tx.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -212,6 +226,13 @@ export default function FinancialTransactions() {
 
     return matchesSearch && matchesType && matchesStatus && matchesAccount;
   });
+
+  // Cálculo de Paginação
+  const totalItems = filteredTransactions.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+  const paginatedTransactions = filteredTransactions.slice(startIndex, endIndex);
 
   // Totais
   const totalIncome = filteredTransactions
@@ -231,20 +252,27 @@ export default function FinancialTransactions() {
         <div>
           <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
             <Receipt className="text-emerald-600" size={28} />
-            Transações & Gastos (Receitas e Despesas)
+            Receitas e Despesas
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Lance e acompanhe receitas, gastos por modalidade e anexe comprovantes de pagamento
-          </p>
         </div>
 
-        <button
-          onClick={() => handleOpenModal()}
-          className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-semibold transition-all shadow-md hover:shadow-emerald-600/20 text-sm"
-        >
-          <Plus size={18} />
-          Nova Transação
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => navigate('/financeiro/relatorios')}
+            className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 px-4 py-2.5 rounded-xl font-semibold transition-all text-sm"
+          >
+            <Printer size={18} className="text-emerald-600" />
+            Relatório PDF Mensal
+          </button>
+
+          <button
+            onClick={() => handleOpenModal()}
+            className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-semibold transition-all shadow-md hover:shadow-emerald-600/20 text-sm"
+          >
+            <Plus size={18} />
+            Nova Transação
+          </button>
+        </div>
       </div>
 
       {/* Cards de Resumo */}
@@ -361,7 +389,6 @@ export default function FinancialTransactions() {
                 <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                   <th className="py-3.5 px-4">Descrição</th>
                   <th className="py-3.5 px-4">Modalidade</th>
-                  <th className="py-3.5 px-4">Conta</th>
                   <th className="py-3.5 px-4">Data</th>
                   <th className="py-3.5 px-4">Status</th>
                   <th className="py-3.5 px-4">Comprovante</th>
@@ -370,7 +397,7 @@ export default function FinancialTransactions() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
-                {filteredTransactions.map(tx => (
+                {paginatedTransactions.map(tx => (
                   <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="py-3.5 px-4 font-semibold text-slate-800">
                       <div className="flex items-center gap-2">
@@ -395,13 +422,6 @@ export default function FinancialTransactions() {
                       ) : (
                         <span className="text-slate-400 text-xs">Sem categoria</span>
                       )}
-                    </td>
-
-                    <td className="py-3.5 px-4 text-slate-600 font-medium">
-                      <div className="flex items-center gap-1.5">
-                        <Building2 size={15} className="text-slate-400" />
-                        {tx.account?.name || 'Não especificada'}
-                      </div>
                     </td>
 
                     <td className="py-3.5 px-4 text-slate-600">
@@ -470,6 +490,73 @@ export default function FinancialTransactions() {
                 ))}
               </tbody>
             </table>
+
+            {/* Rodapé de Paginação */}
+            {filteredTransactions.length > 0 && (
+              <div className="bg-slate-50 border-t border-slate-200 px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-slate-600">
+                <div className="flex items-center gap-2">
+                  <span>Exibir</span>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                  <span>registros por página</span>
+                  <span className="text-slate-400 font-normal ml-2 hidden md:inline">
+                    (Mostrando {totalItems > 0 ? startIndex + 1 : 0} a {endIndex} de {totalItems})
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    title="Página Anterior"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(page => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+                    .map((page, idx, arr) => {
+                      const showEllipsis = idx > 0 && page - arr[idx - 1] > 1;
+                      return (
+                        <div key={page} className="flex items-center">
+                          {showEllipsis && <span className="px-1 text-slate-400 font-bold">...</span>}
+                          <button
+                            onClick={() => setCurrentPage(page)}
+                            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                              currentPage === page
+                                ? 'bg-emerald-600 text-white shadow-xs'
+                                : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        </div>
+                      );
+                    })}
+
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    title="Próxima Página"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

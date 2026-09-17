@@ -29,6 +29,7 @@ import FinancialDashboard from './pages/financial/FinancialDashboard';
 import FinancialAccounts from './pages/financial/FinancialAccounts';
 import FinancialModalities from './pages/financial/FinancialModalities';
 import FinancialTransactions from './pages/financial/FinancialTransactions';
+import FinancialReports from './pages/financial/FinancialReports';
 
 function App() {
   return (
@@ -216,7 +217,7 @@ function App() {
         } />
         <Route path="/financeiro/relatorios" element={
           <ProtectedRoute>
-            <FinancialLayout><FinancialDashboard /></FinancialLayout>
+            <FinancialLayout><FinancialReports /></FinancialLayout>
           </ProtectedRoute>
         } />
 

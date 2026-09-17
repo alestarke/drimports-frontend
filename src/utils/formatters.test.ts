@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { formatBRL, formatUSD } from './formatters';
+import { formatBRL, formatUSD, formatDateOnly } from './formatters';
+
+describe('Formatador de data', () => {
+  it('mantém a data informada sem deslocamento de fuso horário', () => {
+    expect(formatDateOnly('2026-09-17')).toBe('17/09/2026');
+  });
+});
 
 describe('Formatadores de Moeda', () => {
   describe('formatBRL', () => {

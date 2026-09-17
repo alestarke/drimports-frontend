@@ -18,6 +18,11 @@ export function formatUSD(val: number | string): string {
   }).format(numberVal);
 }
 
+export function formatDateOnly(value: string): string {
+  const [year, month, day] = value.slice(0, 10).split('-');
+  return `${day}/${month}/${year}`;
+}
+
 export function slugify(text: string): string {
   if (!text) return '';
   return text
